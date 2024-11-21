@@ -1,0 +1,1 @@
+recursive-include kclip/ *.py *.txt py.typed MANIFEST.in
