@@ -4,7 +4,7 @@ package krec;
 
 message KRecHeader {
     string uuid = 1;
-    string action = 2;
+    string task_prompt = 2;
     string robot_platform = 3;
     string robot_serial = 4;
     uint64 start_timestamp = 5;
