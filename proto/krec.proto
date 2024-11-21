@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package krec;
+
+message KRecHeader {
+    string uuid = 1;
+    string action = 2;
+    string robot_platform = 3;
+    string robot_serial = 4;
+    uint64 start_timestamp = 5;
+    uint64 end_timestamp = 6;
+    repeated ActuatorConfig actuator_configs = 7;
+}
+
+message KRecFrame {
+    uint64 video_timestamp = 1;
+    uint64 frame_number = 2;
+    uint64 inference_step = 3;
+    repeated ActuatorState actuator_states = 4;
+    optional ActuatorCommand actuator_commands = 5;
+    optional IMUValues imu_values = 6;
+}
+
+message ActuatorConfig {
+    uint32 actuator_id = 1;
+    optional double kp = 2;
+    optional double kd = 3;
+    optional double ki = 4;
+    optional double max_torque = 5;  // Nm
+    optional string name = 6;
+}
+
+message ActuatorState {
+    uint32 actuator_id = 1;          // Actuator ID
+    bool online = 2;                 // Online status
+    optional double position = 3;    // Position in degrees
+    optional double velocity = 4;    // Velocity in degrees/second
+    optional double torque = 5;      // Torque in Nm
+    optional double temperature = 6; // Temperature in Celsius
+    optional float voltage = 7;      // Voltage in volts
+    optional float current = 8;      // Current in amperes
+}
+
+message ActuatorCommand {
+    uint32 actuator_id = 1;
+    float position = 2;
+    float velocity = 3;
+    float effort = 4;
+}
+
+message IMUValues {
+    double accel_x = 1; // Acceleration X-axis
+    double accel_y = 2; // Acceleration Y-axis
+    double accel_z = 3; // Acceleration Z-axis
+    double gyro_x = 4;  // Gyroscope X-axis
+    double gyro_y = 5;  // Gyroscope Y-axis
+    double gyro_z = 6;  // Gyroscope Z-axis
+    optional double mag_x = 7;   // Magnetometer X-axis
+    optional double mag_y = 8;   // Magnetometer Y-axis
+    optional double mag_z = 9;   // Magnetometer Z-axis
+    optional IMUQuaternion quaternion = 10;
+}
+
+message IMUQuaternion {
+    double x = 1;
+    double y = 2;
+    double z = 3;
+    double w = 4;
+}
