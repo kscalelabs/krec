@@ -1,7 +1,7 @@
 use krec_rs::{
     ActuatorCommand, ActuatorConfig, ActuatorState, ImuQuaternion, ImuValues, KRec, Vec3,
 };
-use pyo3::exceptions::PyValueError;
+use pyo3::exceptions::{PyIndexError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::PyIterator;
 use tracing::{info, instrument};
@@ -685,8 +685,86 @@ impl PyKRec {
         })
     }
 
+    /// Get a specific frame by index
+    fn get_frame(&self, index: usize) -> PyResult<PyKRecFrame> {
+        if index >= self.inner.frames.len() {
+            return Err(PyIndexError::new_err(format!(
+                "Frame index {} out of range (0-{})",
+                index,
+                self.inner.frames.len() - 1
+            )));
+        }
+        Ok(PyKRecFrame {
+            inner: self.inner.frames[index].clone(),
+        })
+    }
+
+    /// Get all frames
+    fn get_frames(&self) -> Vec<PyKRecFrame> {
+        self.inner
+            .frames
+            .iter()
+            .map(|f| PyKRecFrame { inner: f.clone() })
+            .collect()
+    }
+
+    /// Add a frame to the recording
     fn add_frame(&mut self, frame: &PyKRecFrame) {
-        self.inner.add_frame(frame.inner.clone());
+        self.inner.frames.push(frame.inner.clone());
+    }
+
+    /// Remove a frame at the specified index
+    fn remove_frame(&mut self, index: usize) -> PyResult<()> {
+        if index >= self.inner.frames.len() {
+            return Err(PyIndexError::new_err(format!(
+                "Frame index {} out of range (0-{})",
+                index,
+                self.inner.frames.len() - 1
+            )));
+        }
+        self.inner.frames.remove(index);
+        Ok(())
+    }
+
+    /// Clear all frames
+    fn clear_frames(&mut self) {
+        self.inner.frames.clear();
+    }
+
+    /// Get the number of frames
+    #[getter]
+    fn frame_count(&self) -> usize {
+        self.inner.frames.len()
+    }
+
+    /// Get a frame by index (Python [] operator)
+    fn __getitem__(&self, index: isize) -> PyResult<PyKRecFrame> {
+        let len = self.inner.frames.len() as isize;
+        let normalized_index = if index < 0 { len + index } else { index };
+
+        if normalized_index < 0 || normalized_index >= len {
+            return Err(PyIndexError::new_err(format!(
+                "Frame index {} out of range (0-{})",
+                index,
+                len - 1
+            )));
+        }
+
+        self.get_frame(normalized_index as usize)
+    }
+
+    /// Get the length (Python len() function)
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.inner.frames.len())
+    }
+
+    /// Iterator support for frames
+    fn __iter__(slf: PyRef<'_, Self>) -> PyResult<Py<FrameIterator>> {
+        let iter = FrameIterator {
+            frames: slf.inner.frames.clone(),
+            index: 0,
+        };
+        Python::with_gil(|py| Py::new(py, iter))
     }
 
     fn __repr__(&self) -> String {
@@ -711,21 +789,36 @@ impl PyKRec {
     /// Returns a detailed string representation of the KRec contents
     fn display(&self) -> String {
         let mut output = String::new();
-        
+
         // Header information
         output.push_str("KRec Recording\n");
         output.push_str("==============\n\n");
-        
+
         // Basic info
         output.push_str(&format!("Task: {}\n", self.inner.header.task));
-        output.push_str(&format!("Robot Platform: {}\n", self.inner.header.robot_platform));
-        output.push_str(&format!("Robot Serial: {}\n", self.inner.header.robot_serial));
+        output.push_str(&format!(
+            "Robot Platform: {}\n",
+            self.inner.header.robot_platform
+        ));
+        output.push_str(&format!(
+            "Robot Serial: {}\n",
+            self.inner.header.robot_serial
+        ));
         output.push_str(&format!("UUID: {}\n", self.inner.header.uuid));
-        output.push_str(&format!("Start Timestamp: {}\n", self.inner.header.start_timestamp));
-        output.push_str(&format!("End Timestamp: {}\n", self.inner.header.end_timestamp));
-        
+        output.push_str(&format!(
+            "Start Timestamp: {}\n",
+            self.inner.header.start_timestamp
+        ));
+        output.push_str(&format!(
+            "End Timestamp: {}\n",
+            self.inner.header.end_timestamp
+        ));
+
         // Actuator configs
-        output.push_str(&format!("\nActuator Configs ({})\n", self.inner.header.actuator_configs.len()));
+        output.push_str(&format!(
+            "\nActuator Configs ({})\n",
+            self.inner.header.actuator_configs.len()
+        ));
         output.push_str("----------------\n");
         for config in &self.inner.header.actuator_configs {
             output.push_str(&format!("ID {}: ", config.actuator_id));
@@ -746,15 +839,20 @@ impl PyKRec {
             let last_frame = &self.inner.frames[self.inner.frames.len() - 1];
             output.push_str(&format!(
                 "Time range: {} to {}\n",
-                first_frame.video_timestamp,
-                last_frame.video_timestamp
+                first_frame.video_timestamp, last_frame.video_timestamp
             ));
-            
+
             // Sample frame details (first frame)
             output.push_str("\nFirst frame details:\n");
             output.push_str(&format!("  Frame number: {}\n", first_frame.frame_number));
-            output.push_str(&format!("  Inference step: {}\n", first_frame.inference_step));
-            output.push_str(&format!("  Actuator states: {}\n", first_frame.actuator_states.len()));
+            output.push_str(&format!(
+                "  Inference step: {}\n",
+                first_frame.inference_step
+            ));
+            output.push_str(&format!(
+                "  Actuator states: {}\n",
+                first_frame.actuator_states.len()
+            ));
             if first_frame.actuator_commands.is_some() {
                 output.push_str("  Has actuator commands: yes\n");
             }
@@ -786,7 +884,10 @@ impl PyKRec {
         output.push_str(&format!("Inference step: {}\n", frame.inference_step));
 
         // Actuator states
-        output.push_str(&format!("\nActuator States ({})\n", frame.actuator_states.len()));
+        output.push_str(&format!(
+            "\nActuator States ({})\n",
+            frame.actuator_states.len()
+        ));
         output.push_str("---------------\n");
         for state in &frame.actuator_states {
             output.push_str(&format!("ID {}: ", state.actuator_id));
@@ -817,7 +918,10 @@ impl PyKRec {
             output.push_str("\nIMU Values\n");
             output.push_str("----------\n");
             if let Some(accel) = &imu.accel {
-                output.push_str(&format!("Accel: x={}, y={}, z={}\n", accel.x, accel.y, accel.z));
+                output.push_str(&format!(
+                    "Accel: x={}, y={}, z={}\n",
+                    accel.x, accel.y, accel.z
+                ));
             }
             if let Some(gyro) = &imu.gyro {
                 output.push_str(&format!("Gyro: x={}, y={}, z={}\n", gyro.x, gyro.y, gyro.z));
@@ -836,17 +940,11 @@ impl PyKRec {
         Ok(output)
     }
 
-    /// Returns the number of frames
-    #[getter]
-    fn frame_count(&self) -> usize {
-        self.inner.frames.len()
-    }
-
     /// Returns the header
     #[getter]
     fn header(&self) -> PyKRecHeader {
         PyKRecHeader {
-            inner: self.inner.header.clone()
+            inner: self.inner.header.clone(),
         }
     }
 
@@ -895,7 +993,9 @@ struct PyKRecHeader {
 #[pymethods]
 impl PyKRecHeader {
     #[new]
-    #[pyo3(text_signature = "(uuid=None, task=None, robot_platform=None, robot_serial=None, start_timestamp=None, end_timestamp=None, /, values=None)")]
+    #[pyo3(
+        text_signature = "(uuid=None, task=None, robot_platform=None, robot_serial=None, start_timestamp=None, end_timestamp=None, /, values=None)"
+    )]
     fn new(
         py: Python<'_>,
         uuid: Option<String>,
@@ -1035,7 +1135,9 @@ struct PyKRecFrame {
 #[pymethods]
 impl PyKRecFrame {
     #[new]
-    #[pyo3(text_signature = "(video_timestamp=None, frame_number=None, inference_step=None, /, values=None)")]
+    #[pyo3(
+        text_signature = "(video_timestamp=None, frame_number=None, inference_step=None, /, values=None)"
+    )]
     fn new(
         py: Python<'_>,
         video_timestamp: Option<u64>,
@@ -1135,9 +1237,10 @@ impl PyKRecFrame {
     }
 
     fn get_actuator_commands(&self, _py: Python<'_>) -> Option<PyActuatorCommand> {
-        self.inner.actuator_commands.as_ref().map(|cmd| PyActuatorCommand {
-            inner: cmd.clone(),
-        })
+        self.inner
+            .actuator_commands
+            .as_ref()
+            .map(|cmd| PyActuatorCommand { inner: cmd.clone() })
     }
 
     fn clear_actuator_commands(&mut self) {
@@ -1150,9 +1253,10 @@ impl PyKRecFrame {
     }
 
     fn get_imu_values(&self, _py: Python<'_>) -> Option<PyIMUValues> {
-        self.inner.imu_values.as_ref().map(|imu| PyIMUValues {
-            inner: imu.clone(),
-        })
+        self.inner
+            .imu_values
+            .as_ref()
+            .map(|imu| PyIMUValues { inner: imu.clone() })
     }
 
     fn clear_imu_values(&mut self) {
@@ -1170,6 +1274,32 @@ impl PyKRecFrame {
 
     fn actuator_state_count(&self) -> usize {
         self.inner.actuator_states.len()
+    }
+}
+
+/// Iterator for frames
+#[pyclass]
+struct FrameIterator {
+    frames: Vec<krec_rs::KRecFrame>,
+    index: usize,
+}
+
+#[pymethods]
+impl FrameIterator {
+    fn __iter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    fn __next__(mut slf: PyRefMut<'_, Self>) -> Option<PyKRecFrame> {
+        if slf.index < slf.frames.len() {
+            let frame = PyKRecFrame {
+                inner: slf.frames[slf.index].clone(),
+            };
+            slf.index += 1;
+            Some(frame)
+        } else {
+            None
+        }
     }
 }
 

@@ -67,10 +67,13 @@ impl KRec {
 
         debug!("Read file of {} bytes", buffer.len());
         let mut pos = 0;
-        
+
         // Read header length and decode header
         if buffer.len() < 4 {
-            return Err(color_eyre::eyre::eyre!("File too short: {} bytes", buffer.len()));
+            return Err(color_eyre::eyre::eyre!(
+                "File too short: {} bytes",
+                buffer.len()
+            ));
         }
         let header_len = u32::from_le_bytes(buffer[..4].try_into().unwrap()) as usize;
         pos += 4;
@@ -78,41 +81,49 @@ impl KRec {
         debug!("Header length prefix: {} bytes", header_len);
         if pos + header_len > buffer.len() {
             return Err(color_eyre::eyre::eyre!(
-                "Incomplete header data: need {} bytes, have {} bytes", 
-                header_len, 
+                "Incomplete header data: need {} bytes, have {} bytes",
+                header_len,
                 buffer.len() - pos
             ));
         }
-        let header = KRecHeader::decode(&buffer[pos..pos+header_len])?;
+        let header = KRecHeader::decode(&buffer[pos..pos + header_len])?;
         pos += header_len;
-        debug!("Read header ({} bytes), position now at {}", header_len, pos);
+        debug!(
+            "Read header ({} bytes), position now at {}",
+            header_len, pos
+        );
 
         let mut frames = Vec::new();
 
         while pos + 4 <= buffer.len() {
-            let frame_len = u32::from_le_bytes(buffer[pos..pos+4].try_into().unwrap()) as usize;
+            let frame_len = u32::from_le_bytes(buffer[pos..pos + 4].try_into().unwrap()) as usize;
             pos += 4;
             debug!("Frame length prefix: {} bytes", frame_len);
 
             if pos + frame_len > buffer.len() {
                 return Err(color_eyre::eyre::eyre!(
-                    "Incomplete frame data: at position {}, need {} bytes, have {} bytes remaining", 
-                    pos, 
-                    frame_len, 
+                    "Incomplete frame data: at position {}, need {} bytes, have {} bytes remaining",
+                    pos,
+                    frame_len,
                     buffer.len() - pos
                 ));
             }
 
-            let frame = KRecFrame::decode(&buffer[pos..pos+frame_len])?;
+            let frame = KRecFrame::decode(&buffer[pos..pos + frame_len])?;
             pos += frame_len;
             frames.push(frame);
-            debug!("Read frame {} ({} bytes), position now at {}", frames.len(), frame_len, pos);
+            debug!(
+                "Read frame {} ({} bytes), position now at {}",
+                frames.len(),
+                frame_len,
+                pos
+            );
         }
 
         if pos != buffer.len() {
             return Err(color_eyre::eyre::eyre!(
-                "Trailing data: {} bytes remaining after position {}", 
-                buffer.len() - pos, 
+                "Trailing data: {} bytes remaining after position {}",
+                buffer.len() - pos,
                 pos
             ));
         }
