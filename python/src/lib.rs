@@ -1,5 +1,6 @@
-use krec_rs::{
-    ActuatorCommand, ActuatorConfig, ActuatorState, ImuQuaternion, ImuValues, KRec, Vec3,
+use ::krec::{
+    ActuatorCommand, ActuatorConfig, ActuatorState, ImuQuaternion, ImuValues, KRec, KRecFrame,
+    KRecHeader, Vec3,
 };
 use pyo3::exceptions::{PyIndexError, PyValueError};
 use pyo3::prelude::*;
@@ -678,7 +679,7 @@ impl PyKRec {
     #[instrument]
     fn new(header: &PyKRecHeader) -> PyResult<Self> {
         info!("Creating new Python KRec wrapper");
-        let _ = krec_rs::init();
+        let _ = ::krec::init();
 
         Ok(Self {
             inner: KRec::new(header.inner.clone()),
@@ -969,7 +970,7 @@ impl PyKRec {
         self.save(&temp_path)?;
 
         // Combine with video
-        krec_rs::combine_with_video(video_path, &temp_path, output_path)
+        ::krec::combine_with_video(video_path, &temp_path, output_path)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))?;
 
         // Clean up temporary file
@@ -983,7 +984,7 @@ impl PyKRec {
 #[pyclass(name = "KRecHeader")]
 #[derive(Debug, Clone)]
 struct PyKRecHeader {
-    inner: krec_rs::KRecHeader,
+    inner: KRecHeader,
 }
 
 #[pymethods]
@@ -1014,7 +1015,7 @@ impl PyKRecHeader {
                         "Iterable must contain exactly 6 values: [uuid, task, robot_platform, robot_serial, start_timestamp, end_timestamp]"
                     ));
                 }
-                let mut inner = krec_rs::KRecHeader::default();
+                let mut inner = KRecHeader::default();
                 inner.uuid = items[0].extract::<String>(py)?;
                 inner.task = items[1].extract::<String>(py)?;
                 inner.robot_platform = items[2].extract::<String>(py)?;
@@ -1025,7 +1026,7 @@ impl PyKRecHeader {
             }
         }
 
-        let mut inner = krec_rs::KRecHeader::default();
+        let mut inner = KRecHeader::default();
         inner.uuid = uuid.unwrap_or_default();
         inner.task = task.unwrap_or_default();
         inner.robot_platform = robot_platform.unwrap_or_default();
@@ -1125,7 +1126,7 @@ impl PyKRecHeader {
 #[pyclass(name = "KRecFrame")]
 #[derive(Debug, Clone)]
 struct PyKRecFrame {
-    inner: krec_rs::KRecFrame,
+    inner: KRecFrame,
 }
 
 #[pymethods]
@@ -1153,7 +1154,7 @@ impl PyKRecFrame {
                         "Iterable must contain exactly 3 values: [video_timestamp, frame_number, inference_step]"
                     ));
                 }
-                let mut inner = krec_rs::KRecFrame::default();
+                let mut inner = KRecFrame::default();
                 inner.video_timestamp = items[0].extract::<u64>(py)?;
                 inner.frame_number = items[1].extract::<u64>(py)?;
                 inner.inference_step = items[2].extract::<u64>(py)?;
@@ -1161,7 +1162,7 @@ impl PyKRecFrame {
             }
         }
 
-        let mut inner = krec_rs::KRecFrame::default();
+        let mut inner = KRecFrame::default();
         inner.video_timestamp = video_timestamp.unwrap_or(0);
         inner.frame_number = frame_number.unwrap_or(0);
         inner.inference_step = inference_step.unwrap_or(0);
@@ -1286,7 +1287,7 @@ impl PyKRecFrame {
 /// Iterator for frames
 #[pyclass]
 struct FrameIterator {
-    frames: Vec<krec_rs::KRecFrame>,
+    frames: Vec<KRecFrame>,
     index: usize,
 }
 
@@ -1311,19 +1312,19 @@ impl FrameIterator {
 
 #[pyfunction]
 fn combine_with_video(video_path: &str, krec_path: &str, output_path: &str) -> PyResult<()> {
-    krec_rs::combine_with_video(video_path, krec_path, output_path)
+    ::krec::combine_with_video(video_path, krec_path, output_path)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
 }
 
 #[pyfunction]
 fn extract_from_video(video_path: &str, output_path: &str) -> PyResult<()> {
-    krec_rs::extract_from_video(video_path, output_path)
+    ::krec::extract_from_video(video_path, output_path)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
 }
 
 #[pymodule]
 fn krec(_py: Python, m: &PyModule) -> PyResult<()> {
-    let _ = krec_rs::init();
+    let _ = ::krec::init();
     m.add_class::<PyVec3>()?;
     m.add_class::<PyIMUQuaternion>()?;
     m.add_class::<PyIMUValues>()?;
