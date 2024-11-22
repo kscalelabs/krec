@@ -1,0 +1,18 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "krec"
+version = "0.1.2"
+description = "Python bindings for KRec"
+authors = [{ name = "Denys Bezmenov", email = "denys@kscale.dev" }]
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Rust",
+    "Operating System :: OS Independent",
+]
+
+[tool.maturin]
+features = ["pyo3/extension-module"] 
