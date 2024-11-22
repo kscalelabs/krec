@@ -1,4 +1,4 @@
-name: Publish Python Packages
+name: Publish Packages
 
 on:
   release:
@@ -14,17 +14,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build-rust:
+    name: Build and publish Rust package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Build and publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          cargo publish --package krec-rs
+
   build-wheels:
+    needs: build-rust
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-    name: Build and publish Python package (${{ matrix.os }})
+    name: Build Python wheels (${{ matrix.os }})
     timeout-minutes: 10
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -37,27 +55,29 @@ jobs:
           pip install cibuildwheel
         shell: bash
 
-      - name: Build package
+      - name: Build wheels
         env:
           CIBW_SKIP: "pp* *-musllinux*"  # Skip PyPy and musllinux builds
+          CIBW_BEFORE_BUILD: "pip install maturin"
+          CIBW_BUILD_BACKEND: "maturin"
         run: |
-          cibuildwheel --output-dir dist
+          cd python
+          cibuildwheel --output-dir ../dist
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v3
         with:
           name: wheels-${{ matrix.os }}
-          path: |
-            dist/*.whl
+          path: dist/*.whl
 
   build-source-dist:
-    name: Build and publish Python package (source distribution)
+    needs: build-rust
+    name: Build Python source distribution
     timeout-minutes: 10
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4

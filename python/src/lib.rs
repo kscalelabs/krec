@@ -594,7 +594,7 @@ impl PyActuatorCommand {
         actuator_id: u32,
         position: Option<f32>,
         velocity: Option<f32>,
-        effort: Option<f32>,
+        torque: Option<f32>,
         values: Option<&PyAny>,
     ) -> PyResult<Self> {
         if let Some(values) = values {
@@ -613,7 +613,7 @@ impl PyActuatorCommand {
                 inner.actuator_id = actuator_id;
                 inner.position = coords[0];
                 inner.velocity = coords[1];
-                inner.effort = coords[2];
+                inner.torque = coords[2];
                 return Ok(Self { inner });
             }
         }
@@ -622,14 +622,14 @@ impl PyActuatorCommand {
         inner.actuator_id = actuator_id;
         inner.position = position.unwrap_or(0.0);
         inner.velocity = velocity.unwrap_or(0.0);
-        inner.effort = effort.unwrap_or(0.0);
+        inner.torque = torque.unwrap_or(0.0);
         Ok(Self { inner })
     }
 
     fn __repr__(&self) -> String {
         format!(
-            "ActuatorCommand(id={}, pos={}, vel={}, effort={})",
-            self.inner.actuator_id, self.inner.position, self.inner.velocity, self.inner.effort
+            "ActuatorCommand(id={}, pos={}, vel={}, torque={})",
+            self.inner.actuator_id, self.inner.position, self.inner.velocity, self.inner.torque
         )
     }
 
@@ -657,12 +657,12 @@ impl PyActuatorCommand {
     }
 
     #[getter]
-    fn get_effort(&self) -> f32 {
-        self.inner.effort
+    fn get_torque(&self) -> f32 {
+        self.inner.torque
     }
     #[setter]
-    fn set_effort(&mut self, value: f32) {
-        self.inner.effort = value;
+    fn set_torque(&mut self, value: f32) {
+        self.inner.torque = value;
     }
 }
 
@@ -908,8 +908,8 @@ impl PyKRec {
             output.push_str("\nActuator Commands\n");
             output.push_str("----------------\n");
             output.push_str(&format!(
-                "ID {}: pos={}, vel={}, effort={}\n",
-                cmd.actuator_id, cmd.position, cmd.velocity, cmd.effort
+                "ID {}: pos={}, vel={}, torque={}\n",
+                cmd.actuator_id, cmd.position, cmd.velocity, cmd.torque
             ));
         }
 

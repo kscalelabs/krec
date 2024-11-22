@@ -45,7 +45,7 @@ message ActuatorCommand {
     uint32 actuator_id = 1;
     float position = 2;
     float velocity = 3;
-    float effort = 4;
+    float torque = 4;
 }
 
 message IMUValues {
