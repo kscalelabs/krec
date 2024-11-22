@@ -892,6 +892,140 @@ struct PyKRecHeader {
     inner: krec_rs::KRecHeader,
 }
 
+#[pymethods]
+impl PyKRecHeader {
+    #[new]
+    #[pyo3(text_signature = "(uuid=None, task=None, robot_platform=None, robot_serial=None, start_timestamp=None, end_timestamp=None, /, values=None)")]
+    fn new(
+        py: Python<'_>,
+        uuid: Option<String>,
+        task: Option<String>,
+        robot_platform: Option<String>,
+        robot_serial: Option<String>,
+        start_timestamp: Option<u64>,
+        end_timestamp: Option<u64>,
+        values: Option<&PyAny>,
+    ) -> PyResult<Self> {
+        if let Some(values) = values {
+            if let Ok(iter) = PyIterator::from_object(py, values) {
+                let mut items = Vec::new();
+                for item in iter {
+                    let item = item?;
+                    items.push(item.to_object(py));
+                }
+                if items.len() != 6 {
+                    return Err(PyValueError::new_err(
+                        "Iterable must contain exactly 6 values: [uuid, task, robot_platform, robot_serial, start_timestamp, end_timestamp]"
+                    ));
+                }
+                let mut inner = krec_rs::KRecHeader::default();
+                inner.uuid = items[0].extract::<String>(py)?;
+                inner.task = items[1].extract::<String>(py)?;
+                inner.robot_platform = items[2].extract::<String>(py)?;
+                inner.robot_serial = items[3].extract::<String>(py)?;
+                inner.start_timestamp = items[4].extract::<u64>(py)?;
+                inner.end_timestamp = items[5].extract::<u64>(py)?;
+                return Ok(Self { inner });
+            }
+        }
+
+        let mut inner = krec_rs::KRecHeader::default();
+        inner.uuid = uuid.unwrap_or_default();
+        inner.task = task.unwrap_or_default();
+        inner.robot_platform = robot_platform.unwrap_or_default();
+        inner.robot_serial = robot_serial.unwrap_or_default();
+        inner.start_timestamp = start_timestamp.unwrap_or(0);
+        inner.end_timestamp = end_timestamp.unwrap_or(0);
+        Ok(Self { inner })
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "KRecHeader(uuid='{}', task='{}', robot_platform='{}', robot_serial='{}', start_timestamp={}, end_timestamp={})",
+            self.inner.uuid,
+            self.inner.task,
+            self.inner.robot_platform,
+            self.inner.robot_serial,
+            self.inner.start_timestamp,
+            self.inner.end_timestamp
+        )
+    }
+
+    // Getters and setters for basic fields
+    #[getter]
+    fn get_uuid(&self) -> String {
+        self.inner.uuid.clone()
+    }
+    #[setter]
+    fn set_uuid(&mut self, value: String) {
+        self.inner.uuid = value;
+    }
+
+    #[getter]
+    fn get_task(&self) -> String {
+        self.inner.task.clone()
+    }
+    #[setter]
+    fn set_task(&mut self, value: String) {
+        self.inner.task = value;
+    }
+
+    #[getter]
+    fn get_robot_platform(&self) -> String {
+        self.inner.robot_platform.clone()
+    }
+    #[setter]
+    fn set_robot_platform(&mut self, value: String) {
+        self.inner.robot_platform = value;
+    }
+
+    #[getter]
+    fn get_robot_serial(&self) -> String {
+        self.inner.robot_serial.clone()
+    }
+    #[setter]
+    fn set_robot_serial(&mut self, value: String) {
+        self.inner.robot_serial = value;
+    }
+
+    #[getter]
+    fn get_start_timestamp(&self) -> u64 {
+        self.inner.start_timestamp
+    }
+    #[setter]
+    fn set_start_timestamp(&mut self, value: u64) {
+        self.inner.start_timestamp = value;
+    }
+
+    #[getter]
+    fn get_end_timestamp(&self) -> u64 {
+        self.inner.end_timestamp
+    }
+    #[setter]
+    fn set_end_timestamp(&mut self, value: u64) {
+        self.inner.end_timestamp = value;
+    }
+
+    // Methods for actuator configs
+    fn add_actuator_config(&mut self, config: &PyActuatorConfig) {
+        self.inner.actuator_configs.push(config.inner.clone());
+    }
+
+    fn get_actuator_configs(&self, _py: Python<'_>) -> Vec<PyActuatorConfig> {
+        self.inner
+            .actuator_configs
+            .iter()
+            .map(|config| PyActuatorConfig {
+                inner: config.clone(),
+            })
+            .collect()
+    }
+
+    fn clear_actuator_configs(&mut self) {
+        self.inner.actuator_configs.clear();
+    }
+}
+
 #[pyclass(name = "KRecFrame")]
 #[derive(Debug, Clone)]
 struct PyKRecFrame {
