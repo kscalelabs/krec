@@ -689,6 +689,167 @@ impl PyKRec {
         self.inner.add_frame(frame.inner.clone());
     }
 
+    fn __repr__(&self) -> String {
+        format!(
+            "KRec(frames={}, header={})",
+            self.inner.frames.len(),
+            format!(
+                "KRecHeader(uuid='{}', task='{}', robot_platform='{}', robot_serial='{}', configs={})",
+                self.inner.header.uuid,
+                self.inner.header.task,
+                self.inner.header.robot_platform,
+                self.inner.header.robot_serial,
+                self.inner.header.actuator_configs.len()
+            )
+        )
+    }
+
+    fn __str__(&self) -> String {
+        self.__repr__()
+    }
+
+    /// Returns a detailed string representation of the KRec contents
+    fn display(&self) -> String {
+        let mut output = String::new();
+        
+        // Header information
+        output.push_str("KRec Recording\n");
+        output.push_str("==============\n\n");
+        
+        // Basic info
+        output.push_str(&format!("Task: {}\n", self.inner.header.task));
+        output.push_str(&format!("Robot Platform: {}\n", self.inner.header.robot_platform));
+        output.push_str(&format!("Robot Serial: {}\n", self.inner.header.robot_serial));
+        output.push_str(&format!("UUID: {}\n", self.inner.header.uuid));
+        output.push_str(&format!("Start Timestamp: {}\n", self.inner.header.start_timestamp));
+        output.push_str(&format!("End Timestamp: {}\n", self.inner.header.end_timestamp));
+        
+        // Actuator configs
+        output.push_str(&format!("\nActuator Configs ({})\n", self.inner.header.actuator_configs.len()));
+        output.push_str("----------------\n");
+        for config in &self.inner.header.actuator_configs {
+            output.push_str(&format!("ID {}: ", config.actuator_id));
+            if let Some(name) = &config.name {
+                output.push_str(&format!("{} ", name));
+            }
+            output.push_str(&format!(
+                "(kp={:?}, kd={:?}, ki={:?}, max_torque={:?})\n",
+                config.kp, config.kd, config.ki, config.max_torque
+            ));
+        }
+
+        // Frames summary
+        output.push_str(&format!("\nFrames ({})\n", self.inner.frames.len()));
+        output.push_str("------------\n");
+        if !self.inner.frames.is_empty() {
+            let first_frame = &self.inner.frames[0];
+            let last_frame = &self.inner.frames[self.inner.frames.len() - 1];
+            output.push_str(&format!(
+                "Time range: {} to {}\n",
+                first_frame.video_timestamp,
+                last_frame.video_timestamp
+            ));
+            
+            // Sample frame details (first frame)
+            output.push_str("\nFirst frame details:\n");
+            output.push_str(&format!("  Frame number: {}\n", first_frame.frame_number));
+            output.push_str(&format!("  Inference step: {}\n", first_frame.inference_step));
+            output.push_str(&format!("  Actuator states: {}\n", first_frame.actuator_states.len()));
+            if first_frame.actuator_commands.is_some() {
+                output.push_str("  Has actuator commands: yes\n");
+            }
+            if first_frame.imu_values.is_some() {
+                output.push_str("  Has IMU values: yes\n");
+            }
+        }
+
+        output
+    }
+
+    /// Returns a more detailed string representation of a specific frame
+    fn display_frame(&self, frame_number: usize) -> PyResult<String> {
+        if frame_number >= self.inner.frames.len() {
+            return Err(PyValueError::new_err(format!(
+                "Frame number {} out of range (0-{})",
+                frame_number,
+                self.inner.frames.len() - 1
+            )));
+        }
+
+        let frame = &self.inner.frames[frame_number];
+        let mut output = String::new();
+
+        output.push_str(&format!("Frame {}\n", frame_number));
+        output.push_str("=========\n\n");
+        output.push_str(&format!("Video timestamp: {}\n", frame.video_timestamp));
+        output.push_str(&format!("Frame number: {}\n", frame.frame_number));
+        output.push_str(&format!("Inference step: {}\n", frame.inference_step));
+
+        // Actuator states
+        output.push_str(&format!("\nActuator States ({})\n", frame.actuator_states.len()));
+        output.push_str("---------------\n");
+        for state in &frame.actuator_states {
+            output.push_str(&format!("ID {}: ", state.actuator_id));
+            output.push_str(&format!(
+                "online={}, pos={:?}, vel={:?}, torque={:?}, temp={:?}, volt={:?}, curr={:?}\n",
+                state.online,
+                state.position,
+                state.velocity,
+                state.torque,
+                state.temperature,
+                state.voltage,
+                state.current
+            ));
+        }
+
+        // Actuator commands
+        if let Some(cmd) = &frame.actuator_commands {
+            output.push_str("\nActuator Commands\n");
+            output.push_str("----------------\n");
+            output.push_str(&format!(
+                "ID {}: pos={}, vel={}, effort={}\n",
+                cmd.actuator_id, cmd.position, cmd.velocity, cmd.effort
+            ));
+        }
+
+        // IMU values
+        if let Some(imu) = &frame.imu_values {
+            output.push_str("\nIMU Values\n");
+            output.push_str("----------\n");
+            if let Some(accel) = &imu.accel {
+                output.push_str(&format!("Accel: x={}, y={}, z={}\n", accel.x, accel.y, accel.z));
+            }
+            if let Some(gyro) = &imu.gyro {
+                output.push_str(&format!("Gyro: x={}, y={}, z={}\n", gyro.x, gyro.y, gyro.z));
+            }
+            if let Some(mag) = &imu.mag {
+                output.push_str(&format!("Mag: x={}, y={}, z={}\n", mag.x, mag.y, mag.z));
+            }
+            if let Some(quat) = &imu.quaternion {
+                output.push_str(&format!(
+                    "Quaternion: x={}, y={}, z={}, w={}\n",
+                    quat.x, quat.y, quat.z, quat.w
+                ));
+            }
+        }
+
+        Ok(output)
+    }
+
+    /// Returns the number of frames
+    #[getter]
+    fn frame_count(&self) -> usize {
+        self.inner.frames.len()
+    }
+
+    /// Returns the header
+    #[getter]
+    fn header(&self) -> PyKRecHeader {
+        PyKRecHeader {
+            inner: self.inner.header.clone()
+        }
+    }
+
     fn save(&self, path: &str) -> PyResult<()> {
         self.inner
             .save(path)
@@ -735,6 +896,147 @@ struct PyKRecHeader {
 #[derive(Debug, Clone)]
 struct PyKRecFrame {
     inner: krec_rs::KRecFrame,
+}
+
+#[pymethods]
+impl PyKRecFrame {
+    #[new]
+    #[pyo3(text_signature = "(video_timestamp=None, frame_number=None, inference_step=None, /, values=None)")]
+    fn new(
+        py: Python<'_>,
+        video_timestamp: Option<u64>,
+        frame_number: Option<u64>,
+        inference_step: Option<u64>,
+        values: Option<&PyAny>,
+    ) -> PyResult<Self> {
+        if let Some(values) = values {
+            if let Ok(iter) = PyIterator::from_object(py, values) {
+                let mut items = Vec::new();
+                for item in iter {
+                    let item = item?;
+                    items.push(item.to_object(py));
+                }
+                if items.len() != 3 {
+                    return Err(PyValueError::new_err(
+                        "Iterable must contain exactly 3 values: [video_timestamp, frame_number, inference_step]"
+                    ));
+                }
+                let mut inner = krec_rs::KRecFrame::default();
+                inner.video_timestamp = items[0].extract::<u64>(py)?;
+                inner.frame_number = items[1].extract::<u64>(py)?;
+                inner.inference_step = items[2].extract::<u64>(py)?;
+                return Ok(Self { inner });
+            }
+        }
+
+        let mut inner = krec_rs::KRecFrame::default();
+        inner.video_timestamp = video_timestamp.unwrap_or(0);
+        inner.frame_number = frame_number.unwrap_or(0);
+        inner.inference_step = inference_step.unwrap_or(0);
+        Ok(Self { inner })
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "KRecFrame(video_timestamp={}, frame_number={}, inference_step={}, states={}, has_commands={}, has_imu={})",
+            self.inner.video_timestamp,
+            self.inner.frame_number,
+            self.inner.inference_step,
+            self.inner.actuator_states.len(),
+            self.inner.actuator_commands.is_some(),
+            self.inner.imu_values.is_some()
+        )
+    }
+
+    // Getters and setters for basic fields
+    #[getter]
+    fn get_video_timestamp(&self) -> u64 {
+        self.inner.video_timestamp
+    }
+    #[setter]
+    fn set_video_timestamp(&mut self, value: u64) {
+        self.inner.video_timestamp = value;
+    }
+
+    #[getter]
+    fn get_frame_number(&self) -> u64 {
+        self.inner.frame_number
+    }
+    #[setter]
+    fn set_frame_number(&mut self, value: u64) {
+        self.inner.frame_number = value;
+    }
+
+    #[getter]
+    fn get_inference_step(&self) -> u64 {
+        self.inner.inference_step
+    }
+    #[setter]
+    fn set_inference_step(&mut self, value: u64) {
+        self.inner.inference_step = value;
+    }
+
+    // Methods for actuator states
+    fn add_actuator_state(&mut self, state: &PyActuatorState) {
+        self.inner.actuator_states.push(state.inner.clone());
+    }
+
+    fn get_actuator_states(&self, _py: Python<'_>) -> Vec<PyActuatorState> {
+        self.inner
+            .actuator_states
+            .iter()
+            .map(|state| PyActuatorState {
+                inner: state.clone(),
+            })
+            .collect()
+    }
+
+    fn clear_actuator_states(&mut self) {
+        self.inner.actuator_states.clear();
+    }
+
+    // Methods for actuator commands
+    fn set_actuator_commands(&mut self, commands: Option<&PyActuatorCommand>) {
+        self.inner.actuator_commands = commands.map(|cmd| cmd.inner.clone());
+    }
+
+    fn get_actuator_commands(&self, _py: Python<'_>) -> Option<PyActuatorCommand> {
+        self.inner.actuator_commands.as_ref().map(|cmd| PyActuatorCommand {
+            inner: cmd.clone(),
+        })
+    }
+
+    fn clear_actuator_commands(&mut self) {
+        self.inner.actuator_commands = None;
+    }
+
+    // Methods for IMU values
+    fn set_imu_values(&mut self, imu: Option<&PyIMUValues>) {
+        self.inner.imu_values = imu.map(|imu| imu.inner.clone());
+    }
+
+    fn get_imu_values(&self, _py: Python<'_>) -> Option<PyIMUValues> {
+        self.inner.imu_values.as_ref().map(|imu| PyIMUValues {
+            inner: imu.clone(),
+        })
+    }
+
+    fn clear_imu_values(&mut self) {
+        self.inner.imu_values = None;
+    }
+
+    // Utility methods
+    fn has_actuator_commands(&self) -> bool {
+        self.inner.actuator_commands.is_some()
+    }
+
+    fn has_imu_values(&self) -> bool {
+        self.inner.imu_values.is_some()
+    }
+
+    fn actuator_state_count(&self) -> usize {
+        self.inner.actuator_states.len()
+    }
 }
 
 #[pymodule]
