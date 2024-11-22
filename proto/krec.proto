@@ -17,7 +17,7 @@ message KRecFrame {
     uint64 frame_number = 2;
     uint64 inference_step = 3;
     repeated ActuatorState actuator_states = 4;
-    optional ActuatorCommand actuator_commands = 5;
+    repeated ActuatorCommand actuator_commands = 5;
     optional IMUValues imu_values = 6;
 }
 

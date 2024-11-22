@@ -853,7 +853,7 @@ impl PyKRec {
                 "  Actuator states: {}\n",
                 first_frame.actuator_states.len()
             ));
-            if first_frame.actuator_commands.is_some() {
+            if !first_frame.actuator_commands.is_empty() {
                 output.push_str("  Has actuator commands: yes\n");
             }
             if first_frame.imu_values.is_some() {
@@ -904,13 +904,15 @@ impl PyKRec {
         }
 
         // Actuator commands
-        if let Some(cmd) = &frame.actuator_commands {
+        if !frame.actuator_commands.is_empty() {
             output.push_str("\nActuator Commands\n");
             output.push_str("----------------\n");
-            output.push_str(&format!(
-                "ID {}: pos={}, vel={}, torque={}\n",
-                cmd.actuator_id, cmd.position, cmd.velocity, cmd.torque
-            ));
+            for cmd in &frame.actuator_commands {
+                output.push_str(&format!(
+                    "ID {}: pos={}, vel={}, torque={}\n",
+                    cmd.actuator_id, cmd.position, cmd.velocity, cmd.torque
+                ));
+            }
         }
 
         // IMU values
@@ -1173,7 +1175,7 @@ impl PyKRecFrame {
             self.inner.frame_number,
             self.inner.inference_step,
             self.inner.actuator_states.len(),
-            self.inner.actuator_commands.is_some(),
+            !self.inner.actuator_commands.is_empty(),
             self.inner.imu_values.is_some()
         )
     }
@@ -1226,19 +1228,32 @@ impl PyKRecFrame {
     }
 
     // Methods for actuator commands
-    fn set_actuator_commands(&mut self, commands: Option<&PyActuatorCommand>) {
-        self.inner.actuator_commands = commands.map(|cmd| cmd.inner.clone());
+    fn set_actuator_commands(&mut self, commands: Vec<PyActuatorCommand>) {
+        self.inner.actuator_commands = commands.into_iter().map(|cmd| cmd.inner).collect();
     }
 
-    fn get_actuator_commands(&self, _py: Python<'_>) -> Option<PyActuatorCommand> {
+    fn get_actuator_commands(&self, _py: Python<'_>) -> Vec<PyActuatorCommand> {
         self.inner
             .actuator_commands
-            .as_ref()
+            .iter()
             .map(|cmd| PyActuatorCommand { inner: cmd.clone() })
+            .collect()
     }
 
     fn clear_actuator_commands(&mut self) {
-        self.inner.actuator_commands = None;
+        self.inner.actuator_commands.clear();
+    }
+
+    fn add_actuator_command(&mut self, command: &PyActuatorCommand) {
+        self.inner.actuator_commands.push(command.inner.clone());
+    }
+
+    fn has_actuator_commands(&self) -> bool {
+        !self.inner.actuator_commands.is_empty()
+    }
+
+    fn actuator_command_count(&self) -> usize {
+        self.inner.actuator_commands.len()
     }
 
     // Methods for IMU values
@@ -1258,9 +1273,6 @@ impl PyKRecFrame {
     }
 
     // Utility methods
-    fn has_actuator_commands(&self) -> bool {
-        self.inner.actuator_commands.is_some()
-    }
 
     fn has_imu_values(&self) -> bool {
         self.inner.imu_values.is_some()
