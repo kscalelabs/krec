@@ -2,6 +2,9 @@
 name = "krec"
 version = "0.1.0"
 edition = "2021"
+description = "K-Scale robot action format"
+license = "MIT"
+authors = ["Denys Bezmenov <denys@kscale.dev>"]
 
 [dependencies]
 prost = "0.13"
