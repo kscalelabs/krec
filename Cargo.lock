@@ -210,16 +210,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "krec-py"
-version = "0.1.0"
-dependencies = [
- "krec-rs",
- "pyo3",
- "tracing",
-]
-
-[[package]]
-name = "krec-rs"
+name = "krec"
 version = "0.1.0"
 dependencies = [
  "bytes",
@@ -230,6 +221,15 @@ dependencies = [
  "thiserror",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "krec-py"
+version = "0.1.0"
+dependencies = [
+ "krec",
+ "pyo3",
+ "tracing",
 ]
 
 [[package]]

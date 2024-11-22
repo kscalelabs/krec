@@ -1,5 +1,5 @@
 [package]
-name = "krec-rs"
+name = "krec"
 version = "0.1.0"
 edition = "2021"
 
