@@ -1,1 +1,0 @@
-recursive-include krec/ *.py *.txt py.typed MANIFEST.in
