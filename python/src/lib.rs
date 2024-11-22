@@ -961,19 +961,13 @@ impl PyKRec {
         Ok(Self { inner: krec })
     }
 
-    fn combine_with_video(
-        &self,
-        video_path: &str,
-        output_path: &str,
-        uuid: &str,
-        task: &str,
-    ) -> PyResult<()> {
+    fn combine_with_video(&self, video_path: &str, output_path: &str) -> PyResult<()> {
         // First save the KRec to a temporary file
         let temp_path = format!("{}.tmp.krec", output_path);
         self.save(&temp_path)?;
 
         // Combine with video
-        krec_rs::combine_with_video(video_path, &temp_path, output_path, uuid, task)
+        krec_rs::combine_with_video(video_path, &temp_path, output_path)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))?;
 
         // Clean up temporary file
@@ -1303,6 +1297,18 @@ impl FrameIterator {
     }
 }
 
+#[pyfunction]
+fn combine_with_video(video_path: &str, krec_path: &str, output_path: &str) -> PyResult<()> {
+    krec_rs::combine_with_video(video_path, krec_path, output_path)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
+}
+
+#[pyfunction]
+fn extract_from_video(video_path: &str, output_path: &str) -> PyResult<()> {
+    krec_rs::extract_from_video(video_path, output_path)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
+}
+
 #[pymodule]
 fn krec(_py: Python, m: &PyModule) -> PyResult<()> {
     let _ = krec_rs::init();
@@ -1315,5 +1321,9 @@ fn krec(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyKRecFrame>()?;
     m.add_class::<PyKRecHeader>()?;
     m.add_class::<PyKRec>()?;
+    m.add_class::<FrameIterator>()?;
+    m.add_function(wrap_pyfunction!(combine_with_video, m)?)?;
+    m.add_function(wrap_pyfunction!(extract_from_video, m)?)?;
+
     Ok(())
 }

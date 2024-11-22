@@ -1,3 +1,4 @@
+use crate::KRec;
 use color_eyre::{eyre::eyre, Result};
 use std::path::Path;
 use thiserror::Error;
@@ -14,8 +15,6 @@ pub fn combine_with_video(
     video_path: impl AsRef<Path>,
     krec_path: impl AsRef<Path>,
     output_path: impl AsRef<Path>,
-    uuid: &str,
-    task: &str,
 ) -> Result<()> {
     info!("Combining video with KRec data");
     debug!(
@@ -24,6 +23,30 @@ pub fn combine_with_video(
         krec_path.as_ref().display(),
         output_path.as_ref().display()
     );
+
+    // Read the KRec file to get UUID and task
+    let krec = KRec::load(
+        krec_path
+            .as_ref()
+            .to_str()
+            .ok_or_else(|| eyre!("Invalid KRec path: {}", krec_path.as_ref().display()))?,
+    )?;
+
+    if krec.header.uuid.is_empty() {
+        return Err(eyre!("KRec file missing UUID"));
+    }
+
+    if krec.header.task.is_empty() {
+        return Err(eyre!("KRec file missing task"));
+    }
+
+    if krec.header.robot_platform.is_empty() {
+        return Err(eyre!("KRec file missing robot platform"));
+    }
+
+    if krec.header.robot_serial.is_empty() {
+        return Err(eyre!("KRec file missing robot serial"));
+    }
 
     let status = std::process::Command::new("ffmpeg")
         .args([
@@ -34,9 +57,13 @@ pub fn combine_with_video(
             "-metadata:s:t",
             "mimetype=application/octet-stream",
             "-metadata:s:t",
-            &format!("uuid={}", uuid),
+            &format!("uuid={}", krec.header.uuid),
             "-metadata:s:t",
-            &format!("task={}", task),
+            &format!("task={}", krec.header.task),
+            "-metadata:s:t",
+            &format!("robot_platform={}", krec.header.robot_platform),
+            "-metadata:s:t",
+            &format!("robot_serial={}", krec.header.robot_serial),
             "-c",
             "copy",
             &output_path.as_ref().to_string_lossy(),
