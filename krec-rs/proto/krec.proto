@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package krec;
+package krec.proto;
 
 message KRecHeader {
     string uuid = 1;
