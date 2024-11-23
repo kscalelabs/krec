@@ -1,0 +1,16 @@
+[package]
+name = "bindings"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "bindings"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = { version = ">= 0.21", features = ["extension-module"] }
+pyo3-stub-gen = ">= 0.6"
+tracing = "0.1"
+
+# Workspace packages.
+krec = { path = "../.." }

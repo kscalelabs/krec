@@ -1,33 +1,37 @@
-use ::krec::{
+use krec::{
     ActuatorCommand, ActuatorConfig, ActuatorState, ImuQuaternion, ImuValues, KRec, KRecFrame,
     KRecHeader, Vec3,
 };
 use pyo3::exceptions::{PyIndexError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::PyIterator;
+use pyo3_stub_gen::define_stub_info_gatherer;
+use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pyfunction, gen_stub_pymethods};
 use tracing::{info, instrument};
 
 /// A 3D vector with x, y, z components
+#[gen_stub_pyclass]
 #[pyclass(name = "Vec3")]
 #[derive(Debug, Clone)]
 struct PyVec3 {
     inner: Vec3,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PyVec3 {
     #[new]
-    #[pyo3(text_signature = "(x=0.0, y=0.0, z=0.0, /, values=None)")]
+    #[pyo3(signature = (x=None, y=None, z=None, values=None))]
     fn new(
-        py: Python<'_>,
+        _py: Python<'_>,
         x: Option<f64>,
         y: Option<f64>,
         z: Option<f64>,
-        values: Option<&PyAny>,
+        values: Option<Bound<'_, PyAny>>,
     ) -> PyResult<Self> {
         if let Some(values) = values {
             // Try to convert from iterable
-            if let Ok(iter) = PyIterator::from_object(py, values) {
+            if let Ok(iter) = PyIterator::from_bound_object(&values) {
                 let mut coords: Vec<f64> = Vec::new();
                 for item in iter {
                     let value: f64 = item?.extract()?;
@@ -76,26 +80,28 @@ impl PyVec3 {
 }
 
 /// A quaternion representing 3D rotation
+#[gen_stub_pyclass]
 #[pyclass(name = "IMUQuaternion")]
 #[derive(Debug, Clone)]
 struct PyIMUQuaternion {
     inner: ImuQuaternion,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PyIMUQuaternion {
     #[new]
-    #[pyo3(text_signature = "(x=0.0, y=0.0, z=0.0, w=1.0, /, values=None)")]
+    #[pyo3(signature = (x=None, y=None, z=None, w=None, values=None))]
     fn new(
-        py: Python<'_>,
+        _py: Python<'_>,
         x: Option<f64>,
         y: Option<f64>,
         z: Option<f64>,
         w: Option<f64>,
-        values: Option<&PyAny>,
+        values: Option<Bound<'_, PyAny>>,
     ) -> PyResult<Self> {
         if let Some(values) = values {
-            if let Ok(iter) = PyIterator::from_object(py, values) {
+            if let Ok(iter) = PyIterator::from_bound_object(&values) {
                 let mut coords: Vec<f64> = Vec::new();
                 for item in iter {
                     let value: f64 = item?.extract()?;
@@ -149,26 +155,28 @@ impl PyIMUQuaternion {
 }
 
 /// IMU sensor values including acceleration, gyroscope, and orientation data
+#[gen_stub_pyclass]
 #[pyclass(name = "IMUValues")]
 #[derive(Debug, Clone)]
 struct PyIMUValues {
     inner: ImuValues,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PyIMUValues {
     #[new]
-    #[pyo3(text_signature = "(accel=None, gyro=None, mag=None, quaternion=None, /, values=None)")]
+    #[pyo3(signature = (accel=None, gyro=None, mag=None, quaternion=None, values=None))]
     fn new(
         py: Python<'_>,
         accel: Option<PyVec3>,
         gyro: Option<PyVec3>,
         mag: Option<PyVec3>,
         quaternion: Option<PyIMUQuaternion>,
-        values: Option<&PyAny>,
+        values: Option<Bound<'_, PyAny>>,
     ) -> PyResult<Self> {
         if let Some(values) = values {
-            if let Ok(iter) = PyIterator::from_object(py, values) {
+            if let Ok(iter) = PyIterator::from_bound_object(&values) {
                 let mut items = Vec::new();
                 for item in iter {
                     let item = item?;
@@ -270,18 +278,18 @@ impl PyIMUValues {
 }
 
 /// State information for a single actuator
+#[gen_stub_pyclass]
 #[pyclass(name = "ActuatorState")]
 #[derive(Debug, Clone)]
 struct PyActuatorState {
     inner: ActuatorState,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PyActuatorState {
     #[new]
-    #[pyo3(
-        text_signature = "(actuator_id, online=False, position=None, velocity=None, torque=None, temperature=None, voltage=None, current=None, /, values=None)"
-    )]
+    #[pyo3(signature = (actuator_id, online=None, position=None, velocity=None, torque=None, temperature=None, voltage=None, current=None, values=None))]
     fn new(
         py: Python<'_>,
         actuator_id: u32,
@@ -292,10 +300,10 @@ impl PyActuatorState {
         temperature: Option<f64>,
         voltage: Option<f32>,
         current: Option<f32>,
-        values: Option<&PyAny>,
+        values: Option<Bound<'_, PyAny>>,
     ) -> PyResult<Self> {
         if let Some(values) = values {
-            if let Ok(iter) = PyIterator::from_object(py, values) {
+            if let Ok(iter) = PyIterator::from_bound_object(&values) {
                 let mut items = Vec::new();
                 for item in iter {
                     let item = item?;
@@ -439,18 +447,18 @@ impl PyActuatorState {
 }
 
 /// Configuration for an actuator
+#[gen_stub_pyclass]
 #[pyclass(name = "ActuatorConfig")]
 #[derive(Debug, Clone)]
 struct PyActuatorConfig {
     inner: ActuatorConfig,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PyActuatorConfig {
     #[new]
-    #[pyo3(
-        text_signature = "(actuator_id, kp=None, kd=None, ki=None, max_torque=None, name=None, /, values=None)"
-    )]
+    #[pyo3(signature = (actuator_id, kp=None, kd=None, ki=None, max_torque=None, name=None, values=None))]
     fn new(
         py: Python<'_>,
         actuator_id: u32,
@@ -459,10 +467,10 @@ impl PyActuatorConfig {
         ki: Option<f64>,
         max_torque: Option<f64>,
         name: Option<String>,
-        values: Option<&PyAny>,
+        values: Option<Bound<'_, PyAny>>,
     ) -> PyResult<Self> {
         if let Some(values) = values {
-            if let Ok(iter) = PyIterator::from_object(py, values) {
+            if let Ok(iter) = PyIterator::from_bound_object(&values) {
                 let mut items = Vec::new();
                 for item in iter {
                     let item = item?;
@@ -578,28 +586,28 @@ impl PyActuatorConfig {
 }
 
 /// Command for an actuator
+#[gen_stub_pyclass]
 #[pyclass(name = "ActuatorCommand")]
 #[derive(Debug, Clone)]
 struct PyActuatorCommand {
     inner: ActuatorCommand,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PyActuatorCommand {
     #[new]
-    #[pyo3(
-        text_signature = "(actuator_id, position=0.0, velocity=0.0, effort=0.0, /, values=None)"
-    )]
+    #[pyo3(signature = (actuator_id, position=None, velocity=None, torque=None, values=None))]
     fn new(
-        py: Python<'_>,
+        _py: Python<'_>,
         actuator_id: u32,
         position: Option<f32>,
         velocity: Option<f32>,
         torque: Option<f32>,
-        values: Option<&PyAny>,
+        values: Option<Bound<'_, PyAny>>,
     ) -> PyResult<Self> {
         if let Some(values) = values {
-            if let Ok(iter) = PyIterator::from_object(py, values) {
+            if let Ok(iter) = PyIterator::from_bound_object(&values) {
                 let mut coords: Vec<f32> = Vec::new();
                 for item in iter {
                     let value: f32 = item?.extract()?;
@@ -667,12 +675,14 @@ impl PyActuatorCommand {
     }
 }
 
+#[gen_stub_pyclass]
 #[pyclass(name = "KRec")]
 #[derive(Debug, Clone)]
 struct PyKRec {
     inner: KRec,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PyKRec {
     #[new]
@@ -981,6 +991,7 @@ impl PyKRec {
     }
 }
 
+#[gen_stub_pyclass]
 #[pyclass(name = "KRecHeader")]
 #[derive(Debug, Clone)]
 struct PyKRecHeader {
@@ -988,11 +999,10 @@ struct PyKRecHeader {
 }
 
 #[pymethods]
+#[gen_stub_pymethods]
 impl PyKRecHeader {
     #[new]
-    #[pyo3(
-        text_signature = "(uuid=None, task=None, robot_platform=None, robot_serial=None, start_timestamp=None, end_timestamp=None, /, values=None)"
-    )]
+    #[pyo3(signature = (uuid=None, task=None, robot_platform=None, robot_serial=None, start_timestamp=None, end_timestamp=None, values=None))]
     fn new(
         py: Python<'_>,
         uuid: Option<String>,
@@ -1001,10 +1011,10 @@ impl PyKRecHeader {
         robot_serial: Option<String>,
         start_timestamp: Option<u64>,
         end_timestamp: Option<u64>,
-        values: Option<&PyAny>,
+        values: Option<Bound<'_, PyAny>>,
     ) -> PyResult<Self> {
         if let Some(values) = values {
-            if let Ok(iter) = PyIterator::from_object(py, values) {
+            if let Ok(iter) = PyIterator::from_bound_object(&values) {
                 let mut items = Vec::new();
                 for item in iter {
                     let item = item?;
@@ -1123,6 +1133,7 @@ impl PyKRecHeader {
     }
 }
 
+#[gen_stub_pyclass]
 #[pyclass(name = "KRecFrame")]
 #[derive(Debug, Clone)]
 struct PyKRecFrame {
@@ -1130,20 +1141,19 @@ struct PyKRecFrame {
 }
 
 #[pymethods]
+#[gen_stub_pymethods]
 impl PyKRecFrame {
     #[new]
-    #[pyo3(
-        text_signature = "(video_timestamp=None, frame_number=None, inference_step=None, /, values=None)"
-    )]
+    #[pyo3(signature = (video_timestamp=None, frame_number=None, inference_step=None, values=None))]
     fn new(
         py: Python<'_>,
         video_timestamp: Option<u64>,
         frame_number: Option<u64>,
         inference_step: Option<u64>,
-        values: Option<&PyAny>,
+        values: Option<Bound<'_, PyAny>>,
     ) -> PyResult<Self> {
         if let Some(values) = values {
-            if let Ok(iter) = PyIterator::from_object(py, values) {
+            if let Ok(iter) = PyIterator::from_bound_object(&values) {
                 let mut items = Vec::new();
                 for item in iter {
                     let item = item?;
@@ -1258,6 +1268,7 @@ impl PyKRecFrame {
     }
 
     // Methods for IMU values
+    #[pyo3(signature = (imu=None))]
     fn set_imu_values(&mut self, imu: Option<&PyIMUValues>) {
         self.inner.imu_values = imu.map(|imu| imu.inner.clone());
     }
@@ -1285,12 +1296,14 @@ impl PyKRecFrame {
 }
 
 /// Iterator for frames
+#[gen_stub_pyclass]
 #[pyclass]
 struct FrameIterator {
     frames: Vec<KRecFrame>,
     index: usize,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl FrameIterator {
     fn __iter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
@@ -1310,12 +1323,14 @@ impl FrameIterator {
     }
 }
 
+#[gen_stub_pyfunction]
 #[pyfunction]
 fn combine_with_video(video_path: &str, krec_path: &str, output_path: &str) -> PyResult<()> {
     ::krec::combine_with_video(video_path, krec_path, output_path)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
 }
 
+#[gen_stub_pyfunction]
 #[pyfunction]
 fn extract_from_video(video_path: &str, output_path: &str) -> PyResult<()> {
     ::krec::extract_from_video(video_path, output_path)
@@ -1323,7 +1338,7 @@ fn extract_from_video(video_path: &str, output_path: &str) -> PyResult<()> {
 }
 
 #[pymodule]
-fn krec(_py: Python, m: &PyModule) -> PyResult<()> {
+fn bindings(m: &Bound<PyModule>) -> PyResult<()> {
     let _ = ::krec::init();
     m.add_class::<PyVec3>()?;
     m.add_class::<PyIMUQuaternion>()?;
@@ -1340,3 +1355,5 @@ fn krec(_py: Python, m: &PyModule) -> PyResult<()> {
 
     Ok(())
 }
+
+define_stub_info_gatherer!(stub_info);

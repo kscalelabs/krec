@@ -19,3 +19,8 @@ build/
 dist/
 *.so
 out*/
+*.pyi
+
+# Rust
+Cargo.lock
+target/
