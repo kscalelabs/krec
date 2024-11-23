@@ -24,11 +24,11 @@ version: str = version_re.group(1)
 class RustBuildExt(build_ext):
     def run(self) -> None:
         # Generate the stub file
-        subprocess.run(["cargo", "run", "--bin", "stub_gen"], check=True)
+        subprocess.run(["cargo", "run", "--bin", "stub_gen", "--package", "bindings"], check=True)
 
         # Move the generated stub file to parent directory
-        src_file = "krec/rust/rust.pyi"
-        dst_file = "krec/rust.pyi"
+        src_file = "krec/bindings/bindings.pyi"
+        dst_file = "krec/bindings.pyi"
         if os.path.exists(src_file) and not os.path.exists(dst_file):
             shutil.move(src_file, dst_file)
         if not os.path.exists(dst_file):
@@ -47,8 +47,8 @@ setup(
     url="https://github.com/kscalelabs/krec",
     rust_extensions=[
         RustExtension(
-            target="actuator.bindings",
-            path="actuator/bindings/Cargo.toml",
+            target="krec.bindings",
+            path="krec/bindings/Cargo.toml",
             binding=Binding.PyO3,
         ),
     ],
@@ -58,6 +58,6 @@ setup(
     long_description_content_type="text/markdown",
     python_requires=">=3.11",
     include_package_data=True,
-    packages=find_packages(where="python", include=["python/krec"]),
+    packages=find_packages(include=["krec"]),
     cmdclass={"build_ext": RustBuildExt},
 )

@@ -19,4 +19,4 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 prost-build = "0.12"
 
 [workspace]
-members = ["python/krec/bindings"]
+members = ["krec/bindings"]

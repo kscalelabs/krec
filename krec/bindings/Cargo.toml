@@ -13,4 +13,4 @@ pyo3-stub-gen = ">= 0.6"
 tracing = "0.1"
 
 # Workspace packages.
-krec = { version = "0.1.0", path = "../../.." }
+krec = { version = "0.1.0", path = "../.." }
