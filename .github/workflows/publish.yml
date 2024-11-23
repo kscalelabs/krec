@@ -45,12 +45,15 @@ jobs:
       - name: Build package
         env:
           CIBW_SKIP: "pp* *-musllinux*"  # Skip PyPy and musllinux builds
-          CIBW_BEFORE_BUILD: |
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          CIBW_BEFORE_ALL_LINUX: |
             curl -L https://github.com/protocolbuffers/protobuf/releases/download/v28.3/protoc-28.3-linux-x86_64.zip -o protoc.zip
             unzip protoc.zip -d protoc
             mv protoc/bin/protoc /usr/local/bin/protoc
             mv protoc/include/google /usr/local/include/google
+          CIBW_BEFORE_ALL_MACOS: |
+            brew install protobuf
+          CIBW_BEFORE_BUILD: |
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
             source $HOME/.cargo/env
             pip install setuptools-rust
           CIBW_ENVIRONMENT: |
@@ -146,7 +149,7 @@ jobs:
 
       - name: Install protoc
         uses: arduino/setup-protoc@v3
-  
+
       - name: Cache Cargo registry
         uses: actions/cache@v2
         with:
