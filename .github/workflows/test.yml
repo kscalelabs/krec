@@ -54,14 +54,13 @@ jobs:
         run: |
           pip install --upgrade --upgrade-strategy eager -e '.'
 
-      - name: Run static checks
+      - name: Check Rust lint
         run: |
-          mkdir -p .mypy_cache
-          make static-checks
+          cargo fmt --check
 
-      - name: Run unit tests
+      - name: Run Rust tests
         run: |
-          make test
+          cargo test
 
       - name: Save cache
         uses: actions/cache/save@v3
