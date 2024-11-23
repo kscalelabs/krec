@@ -998,8 +998,8 @@ struct PyKRecHeader {
     inner: KRecHeader,
 }
 
-#[pymethods]
 #[gen_stub_pymethods]
+#[pymethods]
 impl PyKRecHeader {
     #[new]
     #[pyo3(signature = (uuid=None, task=None, robot_platform=None, robot_serial=None, start_timestamp=None, end_timestamp=None, values=None))]
@@ -1140,8 +1140,8 @@ struct PyKRecFrame {
     inner: KRecFrame,
 }
 
-#[pymethods]
 #[gen_stub_pymethods]
+#[pymethods]
 impl PyKRecFrame {
     #[new]
     #[pyo3(signature = (video_timestamp=None, frame_number=None, inference_step=None, values=None))]
