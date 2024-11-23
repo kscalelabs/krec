@@ -144,6 +144,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libudev-dev pkg-config
 
+      - name: Install protoc
+        uses: arduino/setup-protoc@v3
+  
       - name: Cache Cargo registry
         uses: actions/cache@v2
         with:
