@@ -1,7 +1,7 @@
 [package]
 name = "krec"
-version = "0.2.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 description = "K-Scale robot action format"
 license = "MIT"
 authors = ["Denys Bezmenov <denys@kscale.dev>"]
@@ -20,3 +20,7 @@ prost-build = "0.12"
 
 [workspace]
 members = ["krec/bindings"]
+
+[workspace.package]
+version = "0.2.0"
+edition = "2021"
