@@ -1,4 +1,5 @@
 [package]
+
 name = "krec"
 version.workspace = true
 edition.workspace = true
@@ -7,6 +8,7 @@ license = "MIT"
 authors = ["Denys Bezmenov <denys@kscale.dev>"]
 
 [dependencies]
+
 prost = "0.13"
 bytes = "1"
 thiserror = "1.0"
@@ -16,11 +18,15 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [build-dependencies]
+
 prost-build = "0.12"
 
 [workspace]
+
 members = ["krec/bindings"]
+resolver = "2"
 
 [workspace.package]
+
 version = "0.2.3"
 edition = "2021"
