@@ -1,0 +1,2 @@
+include Cargo.toml
+recursive-include krec/ *.rs *.pyi *.so *.py *.txt *.md *.toml py.typed
