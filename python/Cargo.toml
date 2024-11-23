@@ -10,4 +10,5 @@ crate-type = ["cdylib"]
 [dependencies]
 krec = { version = "0.1.0", path = ".." }
 pyo3 = { version = "0.19", features = ["extension-module"] }
+pyo3-stub-gen = ">= 0.6.0"
 tracing = "0.1"
