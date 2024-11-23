@@ -22,5 +22,5 @@ prost-build = "0.12"
 members = ["krec/bindings"]
 
 [workspace.package]
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
