@@ -3,3 +3,4 @@ include build.rs
 recursive-include krec/ *.rs *.pyi *.so *.py *.txt *.md *.toml py.typed
 recursive-include src/ *.rs
 recursive-include proto/ *.proto
+recursive-include .cargo/ *.toml
