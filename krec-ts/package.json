@@ -1,0 +1,23 @@
+{
+  "name": "krec-ts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "generate-proto": "pbjs -t static-module -w commonjs -o src/generated/proto.js ../proto/krec.proto && pbts -o src/generated/proto.d.ts src/generated/proto.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@types/node": "^18.19.65",
+    "long": "^5.2.3",
+    "protobufjs": "^7.4.0"
+  },
+  "devDependencies": {
+    "@types/long": "^5.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.0"
+  }
+}
