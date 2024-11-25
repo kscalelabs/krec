@@ -24,3 +24,7 @@ out*/
 # Rust
 Cargo.lock
 target/
+
+# Node
+krec-ts/node_modules/
+krec-ts/src/generated/

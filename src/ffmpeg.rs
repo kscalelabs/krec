@@ -83,7 +83,7 @@ pub fn combine_with_video(
 
 pub fn extract_from_video(video_path: &str, output_path: &str) -> Result<(), FFmpegError> {
     let status = std::process::Command::new("ffmpeg")
-        .args(["-dump_attachment:t:0", output_path, "-i", video_path])
+        .args(["-dump_attachment:t:0", output_path, "-i", video_path, "-f", "null", "/dev/null"])
         .status()
         .map_err(|e| FFmpegError::FFmpeg(e.to_string()))?;
 
