@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "bindings"
-version = "0.1.4"
+version = "0.1.5"
 description = "Python bindings for KRec"
 authors = [{ name = "Denys Bezmenov", email = "denys@kscale.dev" }]
 requires-python = ">=3.7"
