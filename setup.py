@@ -63,7 +63,7 @@ setup(
     zip_safe=False,
     long_description=long_description,
     long_description_content_type="text/markdown",
-    python_requires=">=3.11",
+    python_requires=">=3.8",
     include_package_data=True,
     packages=find_packages(include=["krec"]),
     cmdclass={
