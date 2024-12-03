@@ -81,23 +81,44 @@ pub fn combine_with_video(
     }
 }
 
-pub fn extract_from_video(video_path: &str, output_path: &str) -> Result<(), FFmpegError> {
-    let status = std::process::Command::new("ffmpeg")
-        .args([
-            "-dump_attachment:t:0",
-            output_path,
-            "-i",
-            video_path,
-            "-f",
-            "null",
-            "/dev/null",
-        ])
+pub fn extract_from_video(video_path: &str, output_path: &str, verbose: Option<bool>) -> Result<(), FFmpegError> {
+    info!("Starting extract_from_video");
+    debug!("Input video path: {}", video_path);
+    debug!("Output path: {}", output_path);
+    debug!("Verbose mode: {}", verbose.unwrap_or(false));
+
+    let mut command = std::process::Command::new("ffmpeg");
+    command.args([
+        "-dump_attachment:t:0",
+        output_path,
+        "-i",
+        video_path,
+        "-f",
+        "null",
+        "/dev/null",
+    ]);
+
+    // Control ffmpeg output based on verbose flag
+    if !verbose.unwrap_or(false) {
+        command.stdout(std::process::Stdio::null())
+               .stderr(std::process::Stdio::null());
+    }
+    
+    debug!("Constructed ffmpeg command: {:?}", command);
+
+    let status = command
         .status()
-        .map_err(|e| FFmpegError::FFmpeg(e.to_string()))?;
+        .map_err(|e| {
+            warn!("Failed to execute ffmpeg: {}", e);
+            FFmpegError::FFmpeg(e.to_string())
+        })?;
 
     if status.success() {
+        info!("Successfully extracted KRec from video");
         Ok(())
     } else {
-        Err(FFmpegError::FFmpeg("FFmpeg command failed".to_string()))
+        let error_msg = format!("FFmpeg command failed with status: {}", status);
+        warn!("{}", error_msg);
+        Err(FFmpegError::FFmpeg(error_msg))
     }
 }
