@@ -81,7 +81,11 @@ pub fn combine_with_video(
     }
 }
 
-pub fn extract_from_video(video_path: &str, output_path: &str, verbose: Option<bool>) -> Result<(), FFmpegError> {
+pub fn extract_from_video(
+    video_path: &str,
+    output_path: &str,
+    verbose: Option<bool>,
+) -> Result<(), FFmpegError> {
     info!("Starting extract_from_video");
     debug!("Input video path: {}", video_path);
     debug!("Output path: {}", output_path);
@@ -100,18 +104,17 @@ pub fn extract_from_video(video_path: &str, output_path: &str, verbose: Option<b
 
     // Control ffmpeg output based on verbose flag
     if !verbose.unwrap_or(false) {
-        command.stdout(std::process::Stdio::null())
-               .stderr(std::process::Stdio::null());
+        command
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null());
     }
-    
+
     debug!("Constructed ffmpeg command: {:?}", command);
 
-    let status = command
-        .status()
-        .map_err(|e| {
-            warn!("Failed to execute ffmpeg: {}", e);
-            FFmpegError::FFmpeg(e.to_string())
-        })?;
+    let status = command.status().map_err(|e| {
+        warn!("Failed to execute ffmpeg: {}", e);
+        FFmpegError::FFmpeg(e.to_string())
+    })?;
 
     if status.success() {
         info!("Successfully extracted KRec from video");

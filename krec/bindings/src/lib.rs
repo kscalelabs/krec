@@ -7,7 +7,7 @@ use pyo3::prelude::*;
 use pyo3::types::PyIterator;
 use pyo3_stub_gen::define_stub_info_gatherer;
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pyfunction, gen_stub_pymethods};
-use tracing::{info, instrument, debug, warn};
+use tracing::{debug, info, instrument, warn};
 
 /// A 3D vector with x, y, z components
 #[gen_stub_pyclass]
@@ -1335,19 +1335,20 @@ fn combine_with_video(video_path: &str, krec_path: &str, output_path: &str) -> P
 #[pyo3(signature = (video_path, output_path, verbose=None))]
 fn extract_from_video(video_path: &str, output_path: &str, verbose: Option<bool>) -> PyResult<()> {
     info!("Python binding: extract_from_video called");
-    debug!("Python binding: video_path={}, output_path={}, verbose={:?}", 
-           video_path, output_path, verbose);
-    
-    let result = ::krec::extract_from_video(video_path, output_path, verbose)
-        .map_err(|e| {
-            warn!("Python binding: extract_from_video failed: {}", e);
-            PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string())
-        });
-    
+    debug!(
+        "Python binding: video_path={}, output_path={}, verbose={:?}",
+        video_path, output_path, verbose
+    );
+
+    let result = ::krec::extract_from_video(video_path, output_path, verbose).map_err(|e| {
+        warn!("Python binding: extract_from_video failed: {}", e);
+        PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string())
+    });
+
     if result.is_ok() {
         info!("Python binding: extract_from_video completed successfully");
     }
-    
+
     result
 }
 
