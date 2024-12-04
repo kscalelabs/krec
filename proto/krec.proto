@@ -13,12 +13,13 @@ message KRecHeader {
 }
 
 message KRecFrame {
-    uint64 video_timestamp = 1;
-    uint64 frame_number = 2;
-    uint64 inference_step = 3;
-    repeated ActuatorState actuator_states = 4;
-    repeated ActuatorCommand actuator_commands = 5;
-    optional IMUValues imu_values = 6;
+    uint64 real_timestamp = 1;
+    uint64 video_timestamp = 2;
+    uint64 video_frame_number = 3;
+    uint64 inference_step = 4;
+    repeated ActuatorState actuator_states = 5;
+    repeated ActuatorCommand actuator_commands = 6;
+    optional IMUValues imu_values = 7;
 }
 
 message ActuatorConfig {
