@@ -855,7 +855,10 @@ impl PyKRec {
 
             // Sample frame details (first frame)
             output.push_str("\nFirst frame details:\n");
-            output.push_str(&format!("  Frame number: {}\n", first_frame.frame_number));
+            output.push_str(&format!(
+                "  Video frame number: {}\n",
+                first_frame.video_frame_number
+            ));
             output.push_str(&format!(
                 "  Inference step: {}\n",
                 first_frame.inference_step
@@ -891,7 +894,10 @@ impl PyKRec {
         output.push_str(&format!("Frame {}\n", frame_number));
         output.push_str("=========\n\n");
         output.push_str(&format!("Video timestamp: {}\n", frame.video_timestamp));
-        output.push_str(&format!("Frame number: {}\n", frame.frame_number));
+        output.push_str(&format!(
+            "Video frame number: {}\n",
+            frame.video_frame_number
+        ));
         output.push_str(&format!("Inference step: {}\n", frame.inference_step));
 
         // Actuator states
@@ -1144,12 +1150,13 @@ struct PyKRecFrame {
 #[pymethods]
 impl PyKRecFrame {
     #[new]
-    #[pyo3(signature = (video_timestamp=None, frame_number=None, inference_step=None, values=None))]
+    #[pyo3(signature = (video_timestamp=None, video_frame_number=None, inference_step=None, real_timestamp=None, values=None))]
     fn new(
         py: Python<'_>,
         video_timestamp: Option<u64>,
-        frame_number: Option<u64>,
+        video_frame_number: Option<u64>,
         inference_step: Option<u64>,
+        real_timestamp: Option<u64>,
         values: Option<Bound<'_, PyAny>>,
     ) -> PyResult<Self> {
         if let Some(values) = values {
@@ -1159,31 +1166,34 @@ impl PyKRecFrame {
                     let item = item?;
                     items.push(item.to_object(py));
                 }
-                if items.len() != 3 {
+                if items.len() != 4 {
                     return Err(PyValueError::new_err(
-                        "Iterable must contain exactly 3 values: [video_timestamp, frame_number, inference_step]"
+                        "Iterable must contain exactly 4 values: [video_timestamp, frame_number, inference_step, real_timestamp]"
                     ));
                 }
                 let mut inner = KRecFrame::default();
                 inner.video_timestamp = items[0].extract::<u64>(py)?;
-                inner.frame_number = items[1].extract::<u64>(py)?;
+                inner.video_frame_number = items[1].extract::<u64>(py)?;
                 inner.inference_step = items[2].extract::<u64>(py)?;
+                inner.real_timestamp = items[3].extract::<u64>(py)?;
                 return Ok(Self { inner });
             }
         }
 
         let mut inner = KRecFrame::default();
         inner.video_timestamp = video_timestamp.unwrap_or(0);
-        inner.frame_number = frame_number.unwrap_or(0);
+        inner.video_frame_number = video_frame_number.unwrap_or(0);
         inner.inference_step = inference_step.unwrap_or(0);
+        inner.real_timestamp = real_timestamp.unwrap_or(0);
         Ok(Self { inner })
     }
 
     fn __repr__(&self) -> String {
         format!(
-            "KRecFrame(video_timestamp={}, frame_number={}, inference_step={}, states={}, has_commands={}, has_imu={})",
+            "KRecFrame(real_timestamp={}, video_timestamp={}, video_frame_number={}, inference_step={}, states={}, has_commands={}, has_imu={})",
+            self.inner.real_timestamp,
             self.inner.video_timestamp,
-            self.inner.frame_number,
+            self.inner.video_frame_number,
             self.inner.inference_step,
             self.inner.actuator_states.len(),
             !self.inner.actuator_commands.is_empty(),
@@ -1202,12 +1212,12 @@ impl PyKRecFrame {
     }
 
     #[getter]
-    fn get_frame_number(&self) -> u64 {
-        self.inner.frame_number
+    fn get_video_frame_number(&self) -> u64 {
+        self.inner.video_frame_number
     }
     #[setter]
-    fn set_frame_number(&mut self, value: u64) {
-        self.inner.frame_number = value;
+    fn set_video_frame_number(&mut self, value: u64) {
+        self.inner.video_frame_number = value;
     }
 
     #[getter]
@@ -1217,6 +1227,15 @@ impl PyKRecFrame {
     #[setter]
     fn set_inference_step(&mut self, value: u64) {
         self.inner.inference_step = value;
+    }
+
+    #[getter]
+    fn get_real_timestamp(&self) -> u64 {
+        self.inner.real_timestamp
+    }
+    #[setter]
+    fn set_real_timestamp(&mut self, value: u64) {
+        self.inner.real_timestamp = value;
     }
 
     // Methods for actuator states
