@@ -1351,16 +1351,12 @@ fn combine_with_video(video_path: &str, krec_path: &str, output_path: &str) -> P
 
 #[gen_stub_pyfunction]
 #[pyfunction]
-fn extract_from_video(
-    py: Python<'_>,
-    video_path: &str,
-    verbose: Option<bool>,
-) -> PyResult<PyKRec> {
+fn extract_from_video(py: Python<'_>, video_path: &str, verbose: Option<bool>) -> PyResult<PyKRec> {
     info!("Python binding: extract_from_video called");
-    
+
     let krec = ::krec::extract_from_video(video_path, verbose)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))?;
-    
+
     Ok(PyKRec { inner: krec })
 }
 
