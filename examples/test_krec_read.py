@@ -5,8 +5,6 @@ from datetime import datetime
 
 """Usage:
 python examples/test_krec_read.py --krec_file /path/to/krec/file
-
-python examples/test_krec_read.py --krec_file /home/kasm-user/ali_repos/kmodel/data/datasets/krec_data/nov_29__8_37_pm_krec_w_mkv_w_states/recording_20241125_184810_c249e9f6-4ebf-48c7-b8ea-4aaad721a4f8_edited.krec.mkv
 """
 
 def get_krec_file_type(file_path: str) -> str:
