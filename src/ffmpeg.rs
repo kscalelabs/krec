@@ -1,6 +1,7 @@
 use crate::KRec;
 use color_eyre::{eyre::eyre, Result};
 use std::path::Path;
+use tempfile::NamedTempFile;
 use thiserror::Error;
 use tracing::{debug, info, instrument, warn};
 
@@ -8,6 +9,8 @@ use tracing::{debug, info, instrument, warn};
 pub enum FFmpegError {
     #[error("FFmpeg error: {0}")]
     FFmpeg(String),
+    #[error("Input file not found: {0}")]
+    InputNotFound(String),
 }
 
 #[instrument(skip(video_path, krec_path, output_path))]
@@ -81,20 +84,25 @@ pub fn combine_with_video(
     }
 }
 
-pub fn extract_from_video(
-    video_path: &str,
-    output_path: &str,
-    verbose: Option<bool>,
-) -> Result<(), FFmpegError> {
+pub fn extract_from_video(video_path: &str, verbose: Option<bool>) -> Result<KRec, FFmpegError> {
     info!("Starting extract_from_video");
-    debug!("Input video path: {}", video_path);
-    debug!("Output path: {}", output_path);
-    debug!("Verbose mode: {}", verbose.unwrap_or(false));
 
+    // Check if input file exists
+    if !Path::new(video_path).exists() {
+        return Err(FFmpegError::InputNotFound(video_path.to_string()));
+    }
+
+    // Create a temporary file for FFmpeg output
+    let temp_file = NamedTempFile::new()
+        .map_err(|e| FFmpegError::FFmpeg(format!("Failed to create temporary file: {}", e)))?;
+    let temp_path = temp_file.path().to_string_lossy().to_string();
+
+    // Construct ffmpeg command
     let mut command = std::process::Command::new("ffmpeg");
     command.args([
+        "-y",
         "-dump_attachment:t:0",
-        output_path,
+        &temp_path,
         "-i",
         video_path,
         "-f",
@@ -116,12 +124,18 @@ pub fn extract_from_video(
         FFmpegError::FFmpeg(e.to_string())
     })?;
 
-    if status.success() {
-        info!("Successfully extracted KRec from video");
-        Ok(())
-    } else {
+    if !status.success() {
         let error_msg = format!("FFmpeg command failed with status: {}", status);
         warn!("{}", error_msg);
-        Err(FFmpegError::FFmpeg(error_msg))
+        return Err(FFmpegError::FFmpeg(error_msg));
     }
+
+    // Load the KRec from the temporary file
+    let krec = KRec::load(&temp_path).map_err(|e| {
+        FFmpegError::FFmpeg(format!("Failed to load KRec from temporary file: {}", e))
+    })?;
+
+    // The temporary file will be automatically deleted when temp_file goes out of scope
+    info!("Successfully extracted KRec from video");
+    Ok(krec)
 }

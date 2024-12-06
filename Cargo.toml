@@ -16,6 +16,7 @@ eyre = "0.6"
 color-eyre = "0.6"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tempfile = "3.8"
 
 [build-dependencies]
 
@@ -28,5 +29,5 @@ resolver = "2"
 
 [workspace.package]
 
-version = "0.2.9"
+version = "0.3.0"
 edition = "2021"
