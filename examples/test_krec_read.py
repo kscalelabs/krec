@@ -8,6 +8,9 @@ import krec
 import os
 from datetime import datetime
 
+"""Usage:
+python examples/test_krec_read.py --krec_file /path/to/krec/file
+"""
 
 def get_krec_file_type(file_path: str) -> str:
     """Determine if the file is a direct KREC file or MKV-embedded KREC.
