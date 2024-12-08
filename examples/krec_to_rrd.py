@@ -1,12 +1,12 @@
-"""Usage:
+"""
+Convert KRec data (.krec) to Rerun visualization format (.rrd) and optionally save the rrd file to disk.
+
+Usage:
 # Visualize synthetic KRec data:
 python examples/krec_to_rrd.py --synthetic --spawn-viewer -v
-python examples/krec_to_rrd.py --input /home/kasm-user/ali_repos/kmodel/data/datasets/krec_data/dec_3__11_10am_og_krecs_edited/2024-12-03_17-47-30/recording_20241125_184919_04bf0bae-c5d7-46bb-b1ef-e021c1ad85f8.krec_edited.krec.mkv --spawn-viewer -v
-python examples/krec_to_rrd.py --input /home/kasm-user/ali_repos/kmodel/data/datasets/krec_data/dec_3__11_10am_og_krecs_edited/2024-12-03_17-47-30/temp/temp_2024-12-04_18-25-38/recording_20241125_184841_aad3f390-2589-4fb7-a4b1-c9fab8dd8cc8.krec_edited_from_mkv.krec --spawn-viewer -v
-python examples/krec_to_rrd.py --input /home/kasm-user/ali_repos/kmodel/data/datasets/krec_data/dec_3__11_10am_og_krecs/recording_20241125_184810_c249e9f6-4ebf-48c7-b8ea-4aaad721a4f8.krec.mkv --spawn-viewer -v
 
-python examples/krec_to_rrd.py --input /home/kasm-user/ali_repos/kmodel/data/datasets/krec_data/dec_3__11_10am_og_krecs/recording_20241125_184810_c249e9f6-4ebf-48c7-b8ea-4aaad721a4f8.krec.mkv --spawn-viewer -v
-
+# Visualize KRec file:
+python examples/krec_to_rrd.py --input path/to/recording.krec --spawn-viewer -v
 
 # Save to RRD file:
 python examples/krec_to_rrd.py --synthetic --output output.rrd -v
@@ -25,7 +25,16 @@ from generate_synthetic_krec import generate_synthetic_krec
 
 
 def log_frame_data(frame, frame_idx):
-    """Log frame data to Rerun visualization."""
+    """Log KRec frame data to Rerun visualization.
+    
+    Logs metadata, actuator states/commands, and IMU data for each frame.
+    Data is organized hierarchically in the Rerun viewer under metadata/,
+    actuators/, and imu/ paths.
+
+    Args:
+        frame: KRecFrame object containing the frame data
+        frame_idx: Integer index of the current frame for time sequencing
+    """
 
     # Set time sequence
     rr.set_time_sequence("frame_idx", frame_idx)
@@ -58,20 +67,20 @@ def log_frame_data(frame, frame_idx):
     if imu_values:
         if imu_values.accel:
             # Only scalar logging for acceleration
-            rr.log("imu/acceleration/x", rr.Scalar(imu_values.accel.x))
-            rr.log("imu/acceleration/y", rr.Scalar(imu_values.accel.y))
-            rr.log("imu/acceleration/z", rr.Scalar(imu_values.accel.z))
+            rr.log("imu/accel/x", rr.Scalar(imu_values.accel.x))
+            rr.log("imu/accel/y", rr.Scalar(imu_values.accel.y))
+            rr.log("imu/accel/z", rr.Scalar(imu_values.accel.z))
 
         if imu_values.gyro:
-            rr.log("imu/angular_velocity/x", rr.Scalar(imu_values.gyro.x))
-            rr.log("imu/angular_velocity/y", rr.Scalar(imu_values.gyro.y))
-            rr.log("imu/angular_velocity/z", rr.Scalar(imu_values.gyro.z))
+            rr.log("imu/gyro/x", rr.Scalar(imu_values.gyro.x))
+            rr.log("imu/gyro/y", rr.Scalar(imu_values.gyro.y))
+            rr.log("imu/gyro/z", rr.Scalar(imu_values.gyro.z))
 
         if imu_values.quaternion:
-            rr.log("imu/orientation/x", rr.Scalar(imu_values.quaternion.x))
-            rr.log("imu/orientation/y", rr.Scalar(imu_values.quaternion.y))
-            rr.log("imu/orientation/z", rr.Scalar(imu_values.quaternion.z))
-            rr.log("imu/orientation/w", rr.Scalar(imu_values.quaternion.w))
+            rr.log("imu/quaternion/x", rr.Scalar(imu_values.quaternion.x))
+            rr.log("imu/quaternion/y", rr.Scalar(imu_values.quaternion.y))
+            rr.log("imu/quaternion/z", rr.Scalar(imu_values.quaternion.z))
+            rr.log("imu/quaternion/w", rr.Scalar(imu_values.quaternion.w))
 
 
 def get_grid_blueprint():
