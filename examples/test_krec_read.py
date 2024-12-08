@@ -1,6 +1,5 @@
 """Usage:
 python examples/test_krec_read.py --krec_file /path/to/krec/file
-
 """
 
 import argparse
