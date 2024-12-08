@@ -18,6 +18,7 @@ pub fn combine_with_video(
     video_path: impl AsRef<Path>,
     krec_path: impl AsRef<Path>,
     output_path: impl AsRef<Path>,
+    verbose: Option<bool>,
 ) -> Result<()> {
     info!("Combining video with KRec data");
     debug!(
@@ -51,26 +52,36 @@ pub fn combine_with_video(
         return Err(eyre!("KRec file missing robot serial"));
     }
 
-    let status = std::process::Command::new("ffmpeg")
-        .args([
-            "-i",
-            &video_path.as_ref().to_string_lossy(),
-            "-attach",
-            &krec_path.as_ref().to_string_lossy(),
-            "-metadata:s:t",
-            "mimetype=application/octet-stream",
-            "-metadata:s:t",
-            &format!("uuid={}", krec.header.uuid),
-            "-metadata:s:t",
-            &format!("task={}", krec.header.task),
-            "-metadata:s:t",
-            &format!("robot_platform={}", krec.header.robot_platform),
-            "-metadata:s:t",
-            &format!("robot_serial={}", krec.header.robot_serial),
-            "-c",
-            "copy",
-            &output_path.as_ref().to_string_lossy(),
-        ])
+    let mut command = std::process::Command::new("ffmpeg");
+    command.args([
+        "-y", // Add -y flag to automatically overwrite files
+        "-i",
+        &video_path.as_ref().to_string_lossy(),
+        "-attach",
+        &krec_path.as_ref().to_string_lossy(),
+        "-metadata:s:t",
+        "mimetype=application/octet-stream",
+        "-metadata:s:t",
+        &format!("uuid={}", krec.header.uuid),
+        "-metadata:s:t",
+        &format!("task={}", krec.header.task),
+        "-metadata:s:t",
+        &format!("robot_platform={}", krec.header.robot_platform),
+        "-metadata:s:t",
+        &format!("robot_serial={}", krec.header.robot_serial),
+        "-c",
+        "copy",
+        &output_path.as_ref().to_string_lossy(),
+    ]);
+
+    // Control ffmpeg output based on verbose flag
+    if !verbose.unwrap_or(false) {
+        command
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null());
+    }
+
+    let status = command
         .status()
         .map_err(|e| eyre!("Failed to execute ffmpeg: {}", e))?;
 

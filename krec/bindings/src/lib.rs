@@ -986,7 +986,7 @@ impl PyKRec {
         self.save(&temp_path)?;
 
         // Combine with video
-        ::krec::combine_with_video(video_path, &temp_path, output_path)
+        ::krec::combine_with_video(video_path, &temp_path, output_path, None)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))?;
 
         // Clean up temporary file
@@ -1168,7 +1168,7 @@ impl PyKRecFrame {
                 }
                 if items.len() != 4 {
                     return Err(PyValueError::new_err(
-                        "Iterable must contain exactly 4 values: [video_timestamp, frame_number, inference_step, real_timestamp]"
+                        "Iterable must contain exactly 4 values: [video_timestamp, video_frame_number, inference_step, real_timestamp]"
                     ));
                 }
                 let mut inner = KRecFrame::default();
@@ -1344,8 +1344,14 @@ impl FrameIterator {
 
 #[gen_stub_pyfunction]
 #[pyfunction]
-fn combine_with_video(video_path: &str, krec_path: &str, output_path: &str) -> PyResult<()> {
-    ::krec::combine_with_video(video_path, krec_path, output_path)
+#[pyo3(signature = (video_path, krec_path, output_path, verbose=None))]
+fn combine_with_video(
+    video_path: &str,
+    krec_path: &str,
+    output_path: &str,
+    verbose: Option<bool>,
+) -> PyResult<()> {
+    ::krec::combine_with_video(video_path, krec_path, output_path, verbose)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
 }
 
