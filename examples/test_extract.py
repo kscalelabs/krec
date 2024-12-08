@@ -1,9 +1,4 @@
-import krec
-import argparse
-from pathlib import Path
-
-
-"""
+"""Usage:
 # Just extract and view
 python examples/test_extract.py input.mkv -v
 
@@ -11,22 +6,28 @@ python examples/test_extract.py input.mkv -v
 python examples/test_extract.py input.mkv -o output.krec -v
 """
 
+import argparse
+import logging
+from pathlib import Path
+
+import krec
+
 
 def main(args):
-    print(f"Extracting from: {args.input_file}")
+    logging.info(f"Extracting from: {args.input_file}")
 
     try:
         extracted_krec = krec.extract_from_video(args.input_file, verbose=args.verbose)
-        print("Extraction successful")
-        print(f"Extracted KRec has {len(extracted_krec)} frames")
+        logging.info("Extraction successful")
+        logging.info(f"Extracted KRec has {len(extracted_krec)} frames")
 
         if args.output_file:
             output_path = Path(args.output_file)
             extracted_krec.save(str(output_path))
-            print(f"Saved to: {output_path}")
+            logging.info(f"Saved to: {output_path}")
 
     except Exception as e:
-        print(f"Error: {e}")
+        logging.error(f"Error: {e}")
         return 1
 
     return 0
@@ -38,5 +39,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output-file", type=str, help="Output KRec file path (optional)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
 
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
     args = parser.parse_args()
-    exit(main(args))
+    main(args)
