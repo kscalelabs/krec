@@ -28,3 +28,6 @@ target/
 # Node
 krec-ts/node_modules/
 krec-ts/src/generated/
+
+# Apple
+.ds_store
