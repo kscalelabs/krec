@@ -15,11 +15,18 @@ from argparse import Namespace
 from pathlib import Path
 
 import colorlogging
-
 import krec
 
 
-def main(args: Namespace) -> int:
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Extract KRec data from MKV file")
+    parser.add_argument("input_file", type=str, help="Input MKV file path")
+    parser.add_argument("-o", "--output-file", type=str, help="Output KRec file path (optional)")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
+
+    colorlogging.configure()
+    args = parser.parse_args()
+
     logging.info("Extracting from: %s", args.input_file)
 
     try:
@@ -40,12 +47,4 @@ def main(args: Namespace) -> int:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Extract KRec data from MKV file")
-    parser.add_argument("input_file", type=str, help="Input MKV file path")
-    parser.add_argument("-o", "--output-file", type=str, help="Output KRec file path (optional)")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
-
-    colorlogging.configure()
-
-    args = parser.parse_args()
-    sys.exit(main(args))
+    sys.exit(main())
