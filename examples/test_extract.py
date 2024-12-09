@@ -1,4 +1,7 @@
-"""Usage:
+"""
+Extract KRec data from an MKV file and optionally save it to a new file.
+
+Usage:
 # Just extract and view
 python examples/test_extract.py input.mkv -v
 
