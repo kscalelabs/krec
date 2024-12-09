@@ -69,7 +69,10 @@ setup(
     python_requires=">=3.8",
     include_package_data=True,
     packages=find_packages(include=["krec"]),
-    tests_require=requirements_dev,
+    install_requires=requirements_dev,
+    extras_require={
+        "dev": requirements_dev,
+    },
     cmdclass={
         "build_ext": RustBuildExt,
         "build_py": CustomBuild,
