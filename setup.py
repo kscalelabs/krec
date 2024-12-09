@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import subprocess
+from typing import List
 
 from setuptools import find_packages, setup
 from setuptools.command.build_ext import build_ext
@@ -15,11 +16,13 @@ from setuptools_rust import Binding, RustExtension
 with open("README.md", "r", encoding="utf-8") as f:
     long_description: str = f.read()
 
-
 with open("Cargo.toml", "r", encoding="utf-8") as fh:
     version_re = re.search(r"^version = \"([^\"]*)\"", fh.read(), re.MULTILINE)
 assert version_re is not None, "Could not find version in Cargo.toml"
 version: str = version_re.group(1)
+
+with open("krec/requirements-dev.txt", "r", encoding="utf-8") as f:
+    requirements_dev: List[str] = f.read().splitlines()
 
 
 class RustBuildExt(build_ext):
@@ -66,6 +69,10 @@ setup(
     python_requires=">=3.8",
     include_package_data=True,
     packages=find_packages(include=["krec"]),
+    install_requires=requirements_dev,
+    extras_require={
+        "dev": requirements_dev,
+    },
     cmdclass={
         "build_ext": RustBuildExt,
         "build_py": CustomBuild,
