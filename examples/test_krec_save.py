@@ -17,14 +17,13 @@ import logging
 import sys
 import time
 import uuid
-from typing import Dict, Tuple
 
 import numpy as np
 
 import krec
 
 
-def create_sine_wave_krec(num_frames: int = 100, fps: int = 30) -> Tuple[krec.KRec, Dict]:
+def create_sine_wave_krec(num_frames: int = 100, fps: int = 30) -> tuple[krec.KRec, dict]:
     """Create a synthetic KRec with sine wave data for testing."""
     # Create timestamps
     timestamps = np.arange(num_frames) / fps
@@ -131,7 +130,7 @@ def create_sine_wave_krec(num_frames: int = 100, fps: int = 30) -> Tuple[krec.KR
     }
 
 
-def verify_krec_data(original_data: Dict, loaded_krec: krec.KRec) -> bool:
+def verify_krec_data(original_data: dict, loaded_krec: krec.KRec) -> bool:
     """Verify that the loaded KRec matches the original data."""
     logging.info("Verifying loaded KRec data...")
 
