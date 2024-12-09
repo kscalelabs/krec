@@ -60,6 +60,7 @@ setup(
         ),
     ],
     setup_requires=["setuptools-rust"],
+    install_requires=["colorlogging"],
     zip_safe=False,
     long_description=long_description,
     long_description_content_type="text/markdown",
