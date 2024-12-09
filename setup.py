@@ -22,6 +22,9 @@ assert version_re is not None, "Could not find version in Cargo.toml"
 version: str = version_re.group(1)
 
 
+with open("requirements.txt") as f:
+    requirements: list[str] = f.read().splitlines()
+
 class RustBuildExt(build_ext):
     def run(self) -> None:
         # Generate the stub file
@@ -60,6 +63,7 @@ setup(
         ),
     ],
     setup_requires=["setuptools-rust"],
+    install_requires=requirements,
     zip_safe=False,
     long_description=long_description,
     long_description_content_type="text/markdown",
