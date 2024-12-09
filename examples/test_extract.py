@@ -11,7 +11,6 @@ python examples/test_extract.py input.mkv -o output.krec -v
 import argparse
 import logging
 import sys
-from argparse import Namespace
 from pathlib import Path
 
 import colorlogging
