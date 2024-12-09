@@ -1,4 +1,6 @@
-"""Usage:
+"""Script to test saving and loading KRec data with optional video combination.
+
+Usage:
 # Save directly to KRec file:
 python examples/test_krec_save.py --output_krec output_save_test.krec -v
 
@@ -10,20 +12,23 @@ python examples/test_krec_save.py \
     -v
 """
 
-import krec
 import argparse
-import numpy as np
-from pathlib import Path
-import uuid
-import time
 import logging
+import sys
+import time
+import uuid
+from typing import Dict, Tuple
+
+import numpy as np
+
+import krec
 
 
-def create_sine_wave_krec(num_frames=100, fps=30):
+def create_sine_wave_krec(num_frames: int = 100, fps: int = 30) -> Tuple[krec.KRec, Dict]:
+    """Create a synthetic KRec with sine wave data for testing."""
     # Create timestamps
     timestamps = np.arange(num_frames) / fps
 
-    # Create sine waves
     position_waves = {
         0: np.sin(2 * np.pi * 0.5 * timestamps),
         1: np.sin(2 * np.pi * 0.5 * timestamps),
@@ -126,11 +131,10 @@ def create_sine_wave_krec(num_frames=100, fps=30):
     }
 
 
-def verify_krec_data(original_data, loaded_krec):
-    """Verify that the loaded KRec matches the original data"""
+def verify_krec_data(original_data: Dict, loaded_krec: krec.KRec) -> bool:
+    """Verify that the loaded KRec matches the original data."""
     logging.info("Verifying loaded KRec data...")
 
-    timestamps = original_data["timestamps"]
     num_frames = len(loaded_krec)
 
     for i in range(num_frames):
@@ -183,8 +187,8 @@ def verify_krec_data(original_data, loaded_krec):
     return True
 
 
-def main(args):
-    logging.info(f"Creating synthetic KRec with sine waves...")
+def main(args: argparse.Namespace) -> int:
+    logging.info("Creating synthetic KRec with sine waves...")
     synthetic_krec, original_data = create_sine_wave_krec()
 
     # Save KRec file
@@ -230,9 +234,6 @@ def main(args):
 
 
 if __name__ == "__main__":
-    # Configure logging
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-
     parser = argparse.ArgumentParser(description="Save and verify KRec data")
     parser.add_argument("--output_krec", type=str, required=True, help="Output KRec file path")
     parser.add_argument("--input_video", type=str, help="Input video file path (optional)")
@@ -245,4 +246,4 @@ if __name__ == "__main__":
     if bool(args.input_video) != bool(args.output_video):
         parser.error("--input_video and --output_video must be provided together")
 
-    exit(main(args))
+    sys.exit(main(args))

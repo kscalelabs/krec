@@ -1,11 +1,14 @@
-"""Usage:
-python examples/test_krec_read.py --krec_file /path/to/krec/file
+"""Script to read and display KRec file contents.
+
+Usage:
+python examples/test_krec_read.py --krec_file /path/to/krec/file.krec
 """
 
 import argparse
-import krec
 import os
 from datetime import datetime
+
+import krec
 
 
 def get_krec_file_type(file_path: str) -> str:
@@ -32,7 +35,6 @@ def load_krec_direct(krec_file_path: str) -> krec.KRec:
 
 def load_krec_from_mkv(mkv_file_path: str) -> krec.KRec:
     """Load a KREC file from an MKV file into a manually created temp directory."""
-
     if not os.path.exists(mkv_file_path):
         raise FileNotFoundError(f"File not found: {mkv_file_path}")
 
@@ -66,7 +68,7 @@ def main(args: argparse.Namespace) -> None:
     print(f"krec_obj: {krec_obj}")
     print(f"krec_obj.header: {krec_obj.header}")
     print(f"num frames: {len(krec_obj)}")
-    print(f"succesfully loaded KRec file!")
+    print("succesfully loaded KRec file!")
 
 
 if __name__ == "__main__":
