@@ -13,7 +13,6 @@ import logging
 import os
 import sys
 import traceback
-from datetime import datetime
 
 import colorlogging
 
@@ -47,15 +46,7 @@ def load_krec_from_mkv(mkv_file_path: str, verbose: bool) -> krec.KRec:
     if not os.path.exists(mkv_file_path):
         raise FileNotFoundError(f"File not found: {mkv_file_path}")
 
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    temp_dir = os.path.join(os.path.dirname(mkv_file_path), f"temp_{timestamp}")
-    os.makedirs(temp_dir, exist_ok=True)
-
-    base_name = os.path.basename(mkv_file_path).split(".krec.mkv")[0]
-    krec_file_path = os.path.join(temp_dir, f"{base_name}_from_mkv.krec")
-
-    krec.extract_from_video(mkv_file_path, verbose=verbose)
-    return krec.KRec.load(krec_file_path)
+    return krec.extract_from_video(mkv_file_path, verbose=verbose)
 
 
 def load_krec(file_path: str, verbose: bool) -> krec.KRec:
