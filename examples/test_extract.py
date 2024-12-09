@@ -10,9 +10,10 @@ python examples/test_extract.py input.mkv -o output.krec -v
 """
 
 import argparse
-import colorlogging
 import logging
 from pathlib import Path
+
+import colorlogging
 
 import krec
 
