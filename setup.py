@@ -6,7 +6,6 @@ import os
 import re
 import shutil
 import subprocess
-from typing import List
 
 from setuptools import find_packages, setup
 from setuptools.command.build_ext import build_ext
@@ -21,8 +20,11 @@ with open("Cargo.toml", "r", encoding="utf-8") as fh:
 assert version_re is not None, "Could not find version in Cargo.toml"
 version: str = version_re.group(1)
 
+with open("requirements.txt", "r", encoding="utf-8") as f:
+    requirements: list[str] = f.read().splitlines()
+
 with open("krec/requirements-dev.txt", "r", encoding="utf-8") as f:
-    requirements_dev: List[str] = f.read().splitlines()
+    requirements_dev: list[str] = f.read().splitlines()
 
 
 class RustBuildExt(build_ext):
@@ -52,7 +54,7 @@ class CustomBuild(build_py):
 setup(
     name="krec",
     version=version,
-    description="Python bindings for K-Scale recordingss",
+    description="Python bindings for K-Scale recordings",
     author="K-Scale Labs",
     url="https://github.com/kscalelabs/krec",
     rust_extensions=[
@@ -63,16 +65,14 @@ setup(
         ),
     ],
     setup_requires=["setuptools-rust"],
+    install_requires=requirements,
+    extras_require={"dev": requirements_dev},
     zip_safe=False,
     long_description=long_description,
     long_description_content_type="text/markdown",
     python_requires=">=3.8",
     include_package_data=True,
     packages=find_packages(include=["krec"]),
-    install_requires=requirements_dev,
-    extras_require={
-        "dev": requirements_dev,
-    },
     cmdclass={
         "build_ext": RustBuildExt,
         "build_py": CustomBuild,
