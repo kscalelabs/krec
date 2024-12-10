@@ -6,7 +6,6 @@ import os
 import re
 import shutil
 import subprocess
-from typing import List
 
 from setuptools import find_packages, setup
 from setuptools.command.build_ext import build_ext
@@ -22,10 +21,10 @@ assert version_re is not None, "Could not find version in Cargo.toml"
 version: str = version_re.group(1)
 
 with open("requirements.txt", "r", encoding="utf-8") as f:
-    requirements: List[str] = f.read().splitlines()
+    requirements: list[str] = f.read().splitlines()
 
 with open("krec/requirements-dev.txt", "r", encoding="utf-8") as f:
-    requirements_dev: List[str] = f.read().splitlines()
+    requirements_dev: list[str] = f.read().splitlines()
 
 
 class RustBuildExt(build_ext):
