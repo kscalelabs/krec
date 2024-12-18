@@ -15,11 +15,16 @@ from setuptools_rust import Binding, RustExtension
 with open("README.md", "r", encoding="utf-8") as f:
     long_description: str = f.read()
 
-
 with open("Cargo.toml", "r", encoding="utf-8") as fh:
     version_re = re.search(r"^version = \"([^\"]*)\"", fh.read(), re.MULTILINE)
 assert version_re is not None, "Could not find version in Cargo.toml"
 version: str = version_re.group(1)
+
+with open("requirements.txt", "r", encoding="utf-8") as f:
+    requirements: list[str] = f.read().splitlines()
+
+with open("krec/requirements-dev.txt", "r", encoding="utf-8") as f:
+    requirements_dev: list[str] = f.read().splitlines()
 
 
 class RustBuildExt(build_ext):
@@ -49,7 +54,7 @@ class CustomBuild(build_py):
 setup(
     name="krec",
     version=version,
-    description="Python bindings for K-Scale recordingss",
+    description="Python bindings for K-Scale recordings",
     author="K-Scale Labs",
     url="https://github.com/kscalelabs/krec",
     rust_extensions=[
@@ -60,6 +65,8 @@ setup(
         ),
     ],
     setup_requires=["setuptools-rust"],
+    install_requires=requirements,
+    extras_require={"dev": requirements_dev},
     zip_safe=False,
     long_description=long_description,
     long_description_content_type="text/markdown",
