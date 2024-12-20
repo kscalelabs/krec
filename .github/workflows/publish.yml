@@ -36,25 +36,15 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Install Docker on macOS
-        if: runner.os == 'macOS'
-        run: |
-          brew install docker colima
-          colima start
-          docker info
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install cibuildwheel
-        shell: bash
-
+      # QEMU setup and Linux-specific builds
       - name: Set up QEMU
+        if: runner.os == 'Linux'
         uses: docker/setup-qemu-action@v2
         with:
           platforms: all
 
-      - name: Build package
+      - name: Build manylinux wheels
+        if: runner.os == 'Linux'
         env:
           CIBW_SKIP: "pp* *-musllinux*"  # Skip PyPy and musllinux builds
           CIBW_BEFORE_ALL_LINUX: |
@@ -62,8 +52,6 @@ jobs:
             unzip protoc.zip -d protoc
             mv protoc/bin/protoc /usr/local/bin/protoc
             mv protoc/include/google /usr/local/include/google
-          CIBW_BEFORE_ALL_MACOS: |
-            brew install protobuf
           CIBW_ARCHS_LINUX: auto aarch64 ppc64le s390x
           CIBW_QEMU: "true"
           CIBW_BEFORE_BUILD: |
@@ -73,6 +61,15 @@ jobs:
           CIBW_ENVIRONMENT: |
             PATH="/usr/local/bin:$HOME/.cargo/bin:$PATH"
             CARGO_NET_GIT_FETCH_WITH_CLI=true
+        run: |
+          cibuildwheel --output-dir dist
+
+      # macOS-specific builds (no QEMU/Docker needed)
+      - name: Build macOS wheels
+        if: runner.os == 'macOS'
+        env:
+          CIBW_BEFORE_ALL_MACOS: |
+            brew install protobuf
         run: |
           cibuildwheel --output-dir dist
 
