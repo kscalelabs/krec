@@ -14,14 +14,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-wheels:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    name: Build and publish Python package (${{ matrix.os }})
+  build-wheels-linux:
+    runs-on: ubuntu-latest
+    name: Build and publish Python package (Linux)
     timeout-minutes: 15
-    runs-on: ${{ matrix.os }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -35,13 +31,6 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-
-      - name: Install Docker on macOS
-        if: runner.os == 'macOS'
-        run: |
-          brew install docker colima
-          colima start
-          docker info
 
       - name: Install dependencies
         run: |
@@ -62,8 +51,6 @@ jobs:
             unzip protoc.zip -d protoc
             mv protoc/bin/protoc /usr/local/bin/protoc
             mv protoc/include/google /usr/local/include/google
-          CIBW_BEFORE_ALL_MACOS: |
-            brew install protobuf
           CIBW_ARCHS_LINUX: auto aarch64 ppc64le s390x
           CIBW_QEMU: "true"
           CIBW_BEFORE_BUILD: |
@@ -79,11 +66,12 @@ jobs:
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: wheels-${{ matrix.os }}
+          name: wheels-linux
           path: |
             dist/*.whl
 
   build-source-dist:
+    runs-on: ubuntu-latest
     name: Build and publish Python package (source distribution)
     timeout-minutes: 10
     runs-on: ubuntu-latest
@@ -120,13 +108,11 @@ jobs:
             dist/*.tar.gz
 
   publish-wheels:
-    needs: [build-wheels, build-source-dist]
-    name: Publish Python wheels
-    timeout-minutes: 10
+    needs: [build-wheels-linux, build-source-dist]
     runs-on: ubuntu-latest
-
+    name: Publish Python wheels
     steps:
-      - name: Download all wheels
+      - name: Download all wheels and source dist
         uses: actions/download-artifact@v3
         with:
           path: dist
