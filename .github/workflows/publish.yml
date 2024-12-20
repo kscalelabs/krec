@@ -70,12 +70,14 @@ jobs:
         run: |
           cibuildwheel --output-dir dist
 
-      # macOS-specific builds (no QEMU/Docker needed)
+      # macOS-specific builds
       - name: Build macOS wheels
         if: runner.os == 'macOS'
         env:
           CIBW_BEFORE_ALL_MACOS: |
             brew install protobuf
+          CIBW_ARCHS_MACOS: x86_64  # Restrict macOS builds to x86_64
+          CIBW_SKIP: "*-macosx_arm64"  # Skip arm64 builds explicitly
         run: |
           cibuildwheel --output-dir dist
 
