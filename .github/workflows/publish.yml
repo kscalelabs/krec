@@ -39,7 +39,7 @@ jobs:
       - name: Install Docker on macOS
         if: runner.os == 'macOS'
         run: |
-          brew install docker colima
+          brew install docker
           colima start
 
       - name: Install dependencies
