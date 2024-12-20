@@ -52,11 +52,7 @@ jobs:
 
       - name: Install package
         run: |
-          pip install --upgrade --upgrade-strategy eager -e '.'
-
-      - name: Install dev dependencies
-        run: |
-          pip install -r krec/requirements-dev.txt
+          pip install --upgrade --upgrade-strategy eager -e '.[dev]'
 
       - name: Check Python lint
         run: |
