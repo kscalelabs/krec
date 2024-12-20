@@ -66,6 +66,7 @@ setup(
     ],
     setup_requires=["setuptools-rust"],
     install_requires=requirements,
+    tests_require=requirements_dev,
     extras_require={"dev": requirements_dev},
     zip_safe=False,
     long_description=long_description,
