@@ -20,7 +20,7 @@ with open("Cargo.toml", "r", encoding="utf-8") as fh:
 assert version_re is not None, "Could not find version in Cargo.toml"
 version: str = version_re.group(1)
 
-with open("requirements.txt", "r", encoding="utf-8") as f:
+with open("krec/requirements.txt", "r", encoding="utf-8") as f:
     requirements: list[str] = f.read().splitlines()
 
 with open("krec/requirements-dev.txt", "r", encoding="utf-8") as f:
