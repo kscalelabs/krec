@@ -36,6 +36,13 @@ jobs:
         with:
           toolchain: stable
 
+      - name: Install Docker on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install docker colima
+          colima start
+          docker info
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
