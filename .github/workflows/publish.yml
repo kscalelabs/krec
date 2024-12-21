@@ -22,6 +22,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     name: Build and publish Python package (${{ matrix.os }})
+    timeout-minutes: 60
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -38,7 +39,7 @@ jobs:
         with:
           toolchain: stable
 
-      # Notice: we do NOT set up QEMU here,
+      # We do NOT set up QEMU here,
       # so macOS won't fail on QEMU steps.
 
       - name: Install dependencies
@@ -79,6 +80,7 @@ jobs:
   #
   build-source-dist:
     name: Build and publish Python package (source distribution)
+    timeout-minutes: 10
     runs-on: ubuntu-latest
 
     steps:
@@ -118,6 +120,7 @@ jobs:
   publish-wheels:
     needs: [build-wheels, build-source-dist]
     name: Publish Python wheels
+    timeout-minutes: 10
     runs-on: ubuntu-latest
 
     steps:
@@ -142,6 +145,7 @@ jobs:
   #
   publish-rust:
     name: Build and publish Rust package
+    timeout-minutes: 10
     runs-on: ubuntu-latest
 
     steps:
@@ -252,6 +256,7 @@ jobs:
     name: Publish QEMU-based wheels
     needs: [build-qemu-wheels]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Download QEMU wheels
