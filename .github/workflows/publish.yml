@@ -19,7 +19,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     name: Build and publish Python package (${{ matrix.os }})
-    timeout-minutes: 10
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -69,7 +68,6 @@ jobs:
             dist/*.whl
   build-source-dist:
     name: Build and publish Python package (source distribution)
-    timeout-minutes: 10
     runs-on: ubuntu-latest
 
     steps:
@@ -104,7 +102,6 @@ jobs:
   publish-wheels:
     needs: [build-wheels, build-source-dist]
     name: Publish Python wheels
-    timeout-minutes: 10
     runs-on: ubuntu-latest
 
     steps:
@@ -125,7 +122,6 @@ jobs:
 
   publish-rust:
     name: Build and publish Rust package
-    timeout-minutes: 10
     runs-on: ubuntu-latest
 
     steps:
