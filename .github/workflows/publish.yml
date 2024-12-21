@@ -188,7 +188,6 @@ jobs:
   #
   build-qemu-wheels:
     name: Build QEMU-based wheels (aarch64 only)
-    needs: [publish-wheels]
     runs-on: ubuntu-latest
 
     steps:
