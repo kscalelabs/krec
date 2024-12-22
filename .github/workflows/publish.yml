@@ -188,11 +188,12 @@ jobs:
           cargo publish -p krec
 
   #
-  # 5) Build QEMU-based wheels for aarch64 only (no timeouts)
+  # 5) Build QEMU-based wheels for aarch64 only
   #
   build-qemu-wheels:
     name: Build QEMU-based wheels (aarch64 only)
     runs-on: ubuntu-latest
+    timeout-minutes: 120
 
     steps:
       - name: Checkout code
