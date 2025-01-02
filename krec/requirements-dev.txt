@@ -1,3 +1,9 @@
+# requirements-dev.txt
+
+# Linting
 black
 isort
 ruff
+
+# Testing
+pytest
