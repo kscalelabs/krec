@@ -91,16 +91,8 @@ def create_sine_wave_krec(num_frames: int = 50, fps: int = 30) -> tuple[krec.KRe
 
         # Add IMU data
         imu = krec.IMUValues(
-            accel=krec.Vec3(
-                x=accel_waves["x"][i],
-                y=accel_waves["y"][i],
-                z=accel_waves["z"][i]
-            ),
-            gyro=krec.Vec3(
-                x=gyro_waves["x"][i],
-                y=gyro_waves["y"][i],
-                z=gyro_waves["z"][i]
-            )
+            accel=krec.Vec3(x=accel_waves["x"][i], y=accel_waves["y"][i], z=accel_waves["z"][i]),
+            gyro=krec.Vec3(x=gyro_waves["x"][i], y=gyro_waves["y"][i], z=gyro_waves["z"][i]),
         )
         frame.set_imu_values(imu)
 
@@ -208,6 +200,7 @@ def test_video_combination(synthetic_krec_data: tuple[krec.KRec, dict[str, list[
     # Extract KRec from video
     extracted_krec = krec.extract_from_video(str(output_video))
     assert verify_krec_data(original_data, extracted_krec)
+
 
 def test_header_preservation(synthetic_krec_data: tuple[krec.KRec, dict[str, list[float]]], tmpdir: Path) -> None:
     """Test that KRec header information is preserved during save/load."""
