@@ -1,11 +1,11 @@
 """Tests KRec serialization in Python."""
 
+import logging
+import math
 import os
-from pathlib import Path
 import time
 import uuid
-import math
-import logging
+from pathlib import Path
 
 import pytest
 
