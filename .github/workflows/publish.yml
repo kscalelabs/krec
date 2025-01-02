@@ -4,6 +4,11 @@ on:
   release:
     types: [created]
   workflow_dispatch:
+    inputs:
+      publish_krec_rust:
+        description: 'Publish krec package'
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -15,12 +20,19 @@ concurrency:
 
 jobs:
   build-wheels:
+    name: Build ${{ matrix.arch }} wheels
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
-    name: Build and publish Python package (${{ matrix.os }})
-    timeout-minutes: 15
-    runs-on: ${{ matrix.os }}
+        arch: [x86_64, aarch64, s390x]
+        include:
+          - arch: x86_64
+            skip: "pp* *-musllinux*"
+          - arch: aarch64
+            skip: "pp* *-musllinux* cp313-*"
+          - arch: s390x
+            skip: "pp* *-musllinux* cp312-* cp313-*"
 
     steps:
       - name: Checkout code
@@ -49,7 +61,7 @@ jobs:
 
       - name: Build package
         env:
-          CIBW_SKIP: "pp* *-musllinux*"  # Skip PyPy and musllinux builds
+          CIBW_SKIP: ${{ matrix.skip }}
           CIBW_BEFORE_ALL_LINUX: |
             curl -L https://github.com/protocolbuffers/protobuf/releases/download/v28.3/protoc-28.3-linux-x86_64.zip -o protoc.zip
             unzip protoc.zip -d protoc
@@ -72,7 +84,7 @@ jobs:
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: wheels-${{ matrix.os }}
+          name: wheels-${{ matrix.arch }}
           path: |
             dist/*.whl
 
@@ -139,6 +151,7 @@ jobs:
     name: Build and publish Rust package
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    if: ${{ inputs.publish_krec_rust }}
 
     steps:
       - name: Checkout code
