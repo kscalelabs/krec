@@ -6,6 +6,7 @@ import os
 import time
 import uuid
 from pathlib import Path
+from typing import Mapping
 
 import pytest
 
@@ -13,29 +14,38 @@ import krec
 
 
 @pytest.fixture
-def synthetic_krec_data() -> tuple[krec.KRec, dict[str, list[float]]]:
+def synthetic_krec_data() -> tuple[krec.KRec, dict[str, Mapping[int | str, list[float]]]]:
     """Fixture that provides a synthetic KRec object and its original data."""
     krec_obj, original_data = create_sine_wave_krec(num_frames=50, fps=30)
     return krec_obj, original_data
 
 
-def create_sine_wave_krec(num_frames: int = 50, fps: int = 30) -> tuple[krec.KRec, dict[str, list[float]]]:
+def create_sine_wave_krec(
+    num_frames: int = 50,
+    fps: int = 30,
+) -> tuple[krec.KRec, dict[str, Mapping[int | str, list[float]]]]:
     """Create a synthetic KRec object with sine wave data for testing."""
     # Create timestamps
     timestamps = [i / fps for i in range(num_frames)]
 
     # Create wave data for each joint
-    position_waves = {i: [math.sin(2 * math.pi * 0.5 * t) for t in timestamps] for i in range(3)}
-    velocity_waves = {i: [math.sin(2 * math.pi * 0.5 * t) for t in timestamps] for i in range(3)}
-    torque_waves = {i: [0.5 * math.sin(2 * math.pi * 0.5 * t) for t in timestamps] for i in range(3)}
+    position_waves: dict[int | str, list[float]] = {
+        i: [math.sin(2 * math.pi * 0.5 * t) for t in timestamps] for i in range(3)
+    }
+    velocity_waves: dict[int | str, list[float]] = {
+        i: [math.sin(2 * math.pi * 0.5 * t) for t in timestamps] for i in range(3)
+    }
+    torque_waves: dict[int | str, list[float]] = {
+        i: [0.5 * math.sin(2 * math.pi * 0.5 * t) for t in timestamps] for i in range(3)
+    }
 
     # Add IMU data
-    accel_waves = {
+    accel_waves: dict[int | str, list[float]] = {
         "x": [0.1 * math.sin(2 * math.pi * 0.5 * t) for t in timestamps],
         "y": [0.1 * math.sin(2 * math.pi * 0.5 * t) for t in timestamps],
         "z": [9.81 + 0.1 * math.sin(2 * math.pi * 0.5 * t) for t in timestamps],
     }
-    gyro_waves = {
+    gyro_waves: dict[int | str, list[float]] = {
         "x": [math.sin(2 * math.pi * 0.5 * t) for t in timestamps],
         "y": [math.sin(2 * math.pi * 0.5 * t) for t in timestamps],
         "z": [math.sin(2 * math.pi * 0.5 * t) for t in timestamps],
@@ -98,24 +108,25 @@ def create_sine_wave_krec(num_frames: int = 50, fps: int = 30) -> tuple[krec.KRe
 
         krec_obj.add_frame(frame)
 
-    # Update original data for verification
-    original_data = {
+    original_data: dict[str, Mapping[int | str, list[float]]] = {
         "position_waves": position_waves,
         "velocity_waves": velocity_waves,
         "torque_waves": torque_waves,
         "accel_waves": accel_waves,
         "gyro_waves": gyro_waves,
-        "timestamps": timestamps,
+        "timestamps": {"0": timestamps},
     }
 
     return krec_obj, original_data
 
 
-def verify_krec_data(original_data: dict[str, list[float]], loaded_krec: krec.KRec) -> bool:
+def verify_krec_data(original_data: dict[str, Mapping[int | str, list[float]]], loaded_krec: krec.KRec) -> bool:
     """Verify that loaded KRec data matches the original data."""
     frames = loaded_krec.get_frames()
 
-    def is_close(a: float, b: float, rtol: float = 1e-5) -> bool:
+    def is_close(a: float | None, b: float, rtol: float = 1e-5) -> bool:
+        if a is None:
+            return False
         return abs(a - b) <= rtol * max(abs(a), abs(b))
 
     for i, frame in enumerate(frames):
@@ -137,7 +148,7 @@ def verify_krec_data(original_data: dict[str, list[float]], loaded_krec: krec.KR
 
         # Verify IMU data
         imu = frame.get_imu_values()
-        if imu:
+        if imu and imu.accel and imu.gyro:
             expected_accel = [
                 original_data["accel_waves"]["x"][i],
                 original_data["accel_waves"]["y"][i],
@@ -164,22 +175,22 @@ def verify_krec_data(original_data: dict[str, list[float]], loaded_krec: krec.KR
     return True
 
 
-def test_direct_save_load(synthetic_krec_data: tuple[krec.KRec, dict[str, list[float]]], tmpdir: Path) -> None:
+def test_direct_save_load(
+    synthetic_krec_data: tuple[krec.KRec, dict[str, Mapping[int | str, list[float]]]],
+    tmpdir: Path,
+) -> None:
     """Test saving and loading KRec data directly to/from a file."""
     krec_obj, original_data = synthetic_krec_data
-
     temp_file = tmpdir / "test.krec"
-    # Save KRec to temporary file
     krec_obj.save(str(temp_file))
-
-    # Load KRec from file
     loaded_krec = krec.KRec.load(str(temp_file))
-
-    # Verify the loaded data matches the original
     assert verify_krec_data(original_data, loaded_krec)
 
 
-def test_video_combination(synthetic_krec_data: tuple[krec.KRec, dict[str, list[float]]], tmpdir: Path) -> None:
+def test_video_combination(
+    synthetic_krec_data: tuple[krec.KRec, dict[str, Mapping[int | str, list[float]]]],
+    tmpdir: Path,
+) -> None:
     """Test combining KRec with video and extracting it back."""
     krec_obj, original_data = synthetic_krec_data
 
@@ -198,11 +209,14 @@ def test_video_combination(synthetic_krec_data: tuple[krec.KRec, dict[str, list[
     krec.combine_with_video(str(temp_video), str(temp_krec), str(output_video))
 
     # Extract KRec from video
-    extracted_krec = krec.extract_from_video(str(output_video))
+    extracted_krec = krec.extract_from_video(str(output_video), verbose=False)
     assert verify_krec_data(original_data, extracted_krec)
 
 
-def test_header_preservation(synthetic_krec_data: tuple[krec.KRec, dict[str, list[float]]], tmpdir: Path) -> None:
+def test_header_preservation(
+    synthetic_krec_data: tuple[krec.KRec, dict[str, dict[int | str, list[float]]]],
+    tmpdir: Path,
+) -> None:
     """Test that KRec header information is preserved during save/load."""
     krec_obj, _ = synthetic_krec_data
 
