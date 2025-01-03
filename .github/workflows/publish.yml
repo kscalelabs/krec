@@ -22,17 +22,19 @@ jobs:
   build-wheels:
     name: Build ${{ matrix.arch }} wheels
     timeout-minutes: 60
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        arch: [x86_64, aarch64, s390x]
         include:
-          - arch: x86_64
+          - os: ubuntu-latest
+            arch: x86_64
             skip: "pp* *-musllinux*"
-          - arch: aarch64
+          - os: ubuntu-latest
+            arch: aarch64
             skip: "pp* *-musllinux* cp313-*"
-          - arch: s390x
-            skip: "pp* *-musllinux* cp312-* cp313-*"
+          - os: macos-latest
+            arch: arm64
+            skip: "pp* cp313-*"
 
     steps:
       - name: Checkout code
