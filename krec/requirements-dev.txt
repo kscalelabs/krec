@@ -4,6 +4,7 @@
 black
 isort
 ruff
+mypy
 
 # Testing
 pytest
