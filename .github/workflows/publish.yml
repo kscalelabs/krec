@@ -91,13 +91,20 @@ jobs:
           CIBW_BUILD_VERBOSITY: 1
           CARGO_NET_RETRY: 2
           RUST_BACKTRACE: 1
+          CIBW_QEMU: true
           RUSTC_WRAPPER: sccache
           RUST_LOG: sccache=debug
           CIBW_BEFORE_ALL_LINUX: >
+            curl -L https://github.com/protocolbuffers/protobuf/releases/download/v28.3/protoc-28.3-linux-x86_64.zip -o protoc.zip
+            unzip protoc.zip -d protoc
+            mv protoc/bin/protoc /usr/local/bin/protoc
+            mv protoc/include/google /usr/local/include/google
             yum install -y libudev-devel pkgconfig python3-devel python3-pip python3-wheel &&
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          CIBW_BEFORE_BUILD: pip install setuptools-rust
-          CIBW_ENVIRONMENT: PATH="/usr/local/bin:$HOME/.cargo/bin:$PATH" CARGO_NET_GIT_FETCH_WITH_CLI=true
+          CIBW_BEFORE_ALL_MACOS: |
+            brew install protobuf
+          CIBW_BEFORE_BUILD: |
+            pip install setuptools-rust
         run: |
           cibuildwheel --output-dir dist
 
