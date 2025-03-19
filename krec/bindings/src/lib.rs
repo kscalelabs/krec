@@ -1288,7 +1288,7 @@ impl PyKRecFrame {
 
     // Methods for IMU values
     #[pyo3(signature = (imu=None))]
-    fn set_imu_values(&mut self, imu: Option<&PyIMUValues>) {
+    fn set_imu_values(&mut self, imu: Option<PyIMUValues>) {
         self.inner.imu_values = imu.map(|imu| imu.inner.clone());
     }
 
